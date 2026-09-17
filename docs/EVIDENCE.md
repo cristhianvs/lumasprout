@@ -1,6 +1,10 @@
 # Evidence, without inflated claims
 
-## Technical snapshot: 17 September 2026
+## Subsequent local quality correction: 17 September 2026
+
+The corrected source passed **75 regression tests** (44 Node, 14 general browser, seven modality, five pedagogy and five laboratory), plus **36 Playwright journeys**. The new matrix contains 15,530 events and 856 mathematical attempts; 32 independent completions and four help-only breaks. Lint, formatting and the public build also passed locally. [Current aggregate](evidence/quality-validation-summary.json) and [corrections and limits](CORRECCIONES_CALIDAD.md) are separate from the original published snapshot below. No new deployment or remote CI run is claimed.
+
+## Original published technical snapshot: 17 September 2026
 
 | Check | Result |
 |---|---|

@@ -46,9 +46,10 @@ class ProfileTests(unittest.TestCase):
         if self.page.locator('.equation .fraction').count()==0:
             n,d=map(int,re.findall(r'\d+',self.page.locator('.scene .bar').first.get_attribute('aria-label')))
             return n,d
-        if self.page.get_by_text('Escribe tu respuesta con denominador 8.',exact=True).count():
+        if self.page.locator('#answer-form label').inner_text().startswith('Escribe tu respuesta con denominador'):
             n,d=map(int,self.page.locator('.equation .fraction').first.locator('span').all_inner_texts())
-            return n*8//d,8
+            target=int(re.search(r'\d+',self.page.locator('#answer-form label').inner_text()).group())
+            return n*target//d,target
         a,b=[Fraction(*map(int,part.split())) for part in self.page.locator('.equation .fraction').all_inner_texts()]
         value=a-b if '−' in self.page.locator('.equation').inner_text() else a+b
         return (value.numerator,value.denominator) if value.denominator>1 else (value.numerator*4,4)

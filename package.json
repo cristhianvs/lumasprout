@@ -1,11 +1,16 @@
 {
   "name": "lumasprout",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "An open-source learning adventure with explainable adaptation",
   "license": "MIT",
-  "engines": {"node": ">=22"},
-  "repository": {"type": "git", "url": "https://github.com/cristhianvs/lumasprout.git"},
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cristhianvs/lumasprout.git"
+  },
   "scripts": {
     "test": "node --test tests/*.test.cjs",
     "test:browser": "python tests/browser_test.py",
@@ -14,6 +19,15 @@
     "test:lab": "python tests/laboratory_test.py",
     "start": "node server.cjs",
     "test:pedagogy": "python -X utf8 tests/pedagogy_test.py",
-    "build:site": "node scripts/build-site.cjs"
+    "build:site": "node scripts/build-site.cjs",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check **/*.js **/*.cjs *.css *.html site/*.css site/*.html",
+    "check": "npm run lint && npm run format:check && npm test"
+  },
+  "devDependencies": {
+    "eslint": "10.10.0",
+    "globals": "16.5.0",
+    "prettier": "3.9.7"
   }
 }

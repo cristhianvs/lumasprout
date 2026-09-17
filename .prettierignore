@@ -1,0 +1,9 @@
+node_modules/
+.npm-cache/
+output/
+tmp/
+dist/
+assets/media/
+docs/CONTEXTO_ACTUAL.md
+docs/evidence/
+package-lock.json

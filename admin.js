@@ -1,36 +1,273 @@
 'use strict';
-const $=s=>document.querySelector(s),E=window.Luma,S=window.LumaSimulation;
-const esc=s=>String(s??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let result=null,selected=null,imported=null,preview=false,batch=null;
-$('#scenario').innerHTML=S.scenarios.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
-const reason={recent_errors_and_help:'Errores y ayudas recientes',standard_pace:'Ritmo habitual',simulation_gentle_pace:'Ritmo elegido para la prueba'};
-function stopPreview(){preview=false;$('#game').removeAttribute('src');$('#preview-panel').hidden=true;}
-function read(key){try{return JSON.parse(localStorage.getItem(key));}catch{return null;}}
-function render(state){
- selected=state;if(!state){$('#status').textContent='No hay un registro disponible para esta fuente.';for(const id of ['metrics','decision','profiles','knowledge','timeline','events'])$('#'+id).textContent='';return;}
- const events=state.events,p=E.inferProfile(events,state.parent?.scores),policy=E.sessionPolicy(events,state.simulationConfig||{}),m=policy.metrics;
- const active=state.current?.experience||state.experienceChoice||p.dominant||'estructurado';
- const metrics=[['Participación',m.engagement],['Necesidad de apoyo',m.supportNeed],['Ansiedad',m.anxiety],['Aciertos recientes',m.accuracy===null?'Sin intentos':`${Math.round(m.accuracy*100)}% (${m.attempts} intentos)`],['Latencia mediana',m.medianLatencyMs===null?'Sin datos':`${Math.round(m.medianLatencyMs/1000)} s activos`],['Señales recientes',`${m.errors} errores · ${m.hints} ayudas · ${m.idle} interrupciones`],['Dominio independiente',`${E.skills.filter(k=>E.mastered(state.knowledge[k.id])).length} / 6 habilidades`],['Origen',state.simulation?'Sintético':$('#source').value==='live'?'Partida local':'Registro importado']];
- $('#metrics').innerHTML=metrics.map(([k,v])=>`<div class="metric">${esc(k)}<strong>${esc(v)}</strong></div>`).join('');
- const skill=state.current?.task?.id||E.nextSkill(state.knowledge),complete=E.skills.every(k=>E.mastered(state.knowledge[k.id]));
- $('#decision').innerHTML=`<p><b>${esc(E.experiences[active]?.name||active)}</b> · ${state.experienceChoice?'elección explícita':p.dominant?'preferencia provisional':'opción inicial sin evidencia suficiente'}</p><p>Habilidad: ${esc(complete?'Recorrido dominado':E.skills.find(k=>k.id===skill)?.name)}.</p><p>Apoyo sugerido para el siguiente reto: <b>${policy.support==='concrete'?'piezas concretas · respuesta asistida':'representación visual'}</b>.</p><p>Descanso después de ${policy.breakAfterMs/60000} minutos activos, al resolver el reto. Motivo: ${esc(reason[policy.reason])}.</p><p>Apoyo actual: ${state.current?esc(state.current.supportMode||'visual'):'se asignará al abrir el reto'}. Fase: ${esc(state.phase)}. ${state.current?.assisted?'El reto actual cuenta como asistido.':''}</p><p>${p.observations} observaciones de preferencias. ${state.parent?.scores?'Con observación familiar (60/40 si es válida).':'Sin ponderación familiar.'}</p>`;
- $('#profiles').innerHTML=E.profiles.map(k=>`<div class="profile"><span>${k}</span><progress max="1" value="${p.combined[k]}"></progress><span>${Math.round(p.combined[k]*100)}%</span></div>`).join('');
- $('#knowledge').innerHTML='<table><tr><th>Habilidad</th><th>P estimada</th><th>Evidencias</th></tr>'+E.skills.map(k=>`<tr><td>${k.name}${E.mastered(state.knowledge[k.id])?' ✓':''}</td><td>${Math.round(state.knowledge[k.id].p*100)}%</td><td>${state.knowledge[k.id].n}</td></tr>`).join('')+'</table><p>Probabilidad heurística, no porcentaje de aprendizaje validado. Reintentos y ayudas no acreditan dominio.</p>';
- const rows=$('#source').value==='simulation'&&!preview?result.timeline.slice(0,Number($('#step').value)+1):events.filter(e=>e.type==='adaptation_decision'||e.type==='task_presented').slice(-40).map((e,i)=>({step:i,mathMs:e.mathMs,experience:e.data.experience||'—',skill:e.data.skill,policy:e.data.policy||e.data}));
- $('#timeline').innerHTML=rows.map(t=>`<tr><td>${t.step}</td><td>${Math.round((t.mathMs||0)/1000)} s</td><td>${esc(t.experience)}</td><td>${esc(t.skill)}</td><td>${esc(t.policy.support)}</td><td>${esc(reason[t.policy.reason]||t.policy.reason)}</td></tr>`).join('');
-
- const outcomes=events.filter(e=>e.type==='decision_evaluated').slice(-8);
- $('#decision').innerHTML+=`<h3>Comprobación pedagógica y circuito de respuesta</h3><p>${state.learning?'Secuencia CPA y transferencia contextual activas.':'Registro anterior: sin comprobaciones CPA registradas.'} La observación familiar sobre respuesta a la dificultad se conserva como contexto; no tiene peso validado.</p><table><tr><th>Habilidad</th><th>Etapas independientes</th><th>Próxima oportunidad sin ayuda</th></tr>${E.skills.map(k=>{const l=state.learning?.skills[k.id];return `<tr><td>${esc(k.name)}</td><td>${esc(l?.legacyMastered?'Dominio anterior conservado; CPA no verificada':l?.passed.join(', ')||'Sin evidencia')}</td><td>${l?.probe?'Pendiente':'—'}</td></tr>`;}).join('')}</table><h3>Decisión → respuesta posterior</h3>${outcomes.map(o=>{const d=events.find(e=>e.id===o.data.decisionId);return `<p>${esc(o.task)} · ${esc(d?.data.reason||'Sin decisión enlazada (registro anterior)')} · ${esc(d?.data.stage||'—')} → ${o.data.independent?'resuelto sin ayuda':'resuelto con ayuda/reintento'} · ${d?.data.evidenceIds?.length||0} señales enlazadas.</p>`;}).join('')||'<p>Sin resultados de decisiones registrados todavía.</p>'}`;
- $('#events').textContent=JSON.stringify(events.slice(-12),null,2);
+const $ = (s) => document.querySelector(s),
+  E = window.Luma,
+  S = window.LumaSimulation;
+const esc = (s) =>
+  String(s ?? '—').replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+  );
+let result = null,
+  selected = null,
+  imported = null,
+  preview = false,
+  batch = null;
+$('#scenario').innerHTML = S.scenarios
+  .map((s) => `<option value="${s.id}">${esc(s.name)}</option>`)
+  .join('');
+const reason = {
+  recent_errors_and_help: 'Errores y ayudas recientes',
+  standard_pace: 'Ritmo habitual',
+  simulation_gentle_pace: 'Ritmo elegido para la prueba',
+};
+function stopPreview() {
+  preview = false;
+  $('#game').removeAttribute('src');
+  $('#preview-panel').hidden = true;
 }
-function step(){stopPreview();const i=Number($('#step').value);$('#step-label').textContent=`Paso ${i} de ${result.frames.length-1} · ${result.timeline[i].label}`;$('#previous').disabled=i===0;$('#next').disabled=i===result.frames.length-1;render(result.frames[i]);}
-function execute(){stopPreview();$('#source').value='simulation';result=S.run($('#scenario').value,{pace:$('#pace').value});$('#step').max=result.frames.length-1;$('#step').value=0;$('#replay').hidden=false;$('#status').textContent=`${result.scenario.name}: ${result.checks.filter(c=>c.pass).length}/${result.checks.length} verificaciones aprobadas. Recorre los pasos o prueba uno en el juego.`;step();}
-$('#run').onclick=execute;$('#step').oninput=step;$('#previous').onclick=()=>{$('#step').value=Number($('#step').value)-1;step();};$('#next').onclick=()=>{$('#step').value=Number($('#step').value)+1;step();};
-$('#suite').onclick=()=>{batch=S.scenarios.map(s=>S.run(s.id,{pace:$('#pace').value}));$('#suite-results').innerHTML='<h2>Verificaciones de guiones sintéticos</h2>'+batch.map(r=>`<p class="${r.checks.every(c=>c.pass)?'pass':'fail'}">${esc(r.scenario.name)}: ${r.checks.filter(c=>c.pass).length}/${r.checks.length} · ${r.checks.filter(c=>!c.pass).map(c=>esc(c.name)).join(', ')||'aprobado'}</p>`).join('');$('#status').textContent='Lote ejecutado. La exportación incluye los 12 resultados y sus comprobaciones.';};
-$('#source').onchange=()=>{stopPreview();$('#replay').hidden=$('#source').value!=='simulation';if($('#source').value==='simulation')execute();else{render($('#source').value==='live'?read('isla-luma-v1'):imported);if(selected)$('#status').textContent='Consulta de solo lectura. Actualización local cada 2 segundos.';}};
-$('#preview').onclick=()=>{try{stopPreview();localStorage.setItem('isla-luma-simulation-v1',JSON.stringify(selected));preview=true;$('#preview-panel').hidden=false;$('#game').src='./?simulation=1';$('#status').textContent='Vista jugable activa: los indicadores siguen la partida de prueba.';}catch(error){$('#status').textContent='No se pudo abrir la simulación: '+error.message;}};
-function valid(s){return s&&Array.isArray(s.events)&&s.events.length<=100000&&s.events.every(e=>e&&typeof e.type==='string'&&e.data&&typeof e.data==='object')&&E.skills.every(k=>s.knowledge?.[k.id]&&Number.isFinite(s.knowledge[k.id].p)&&s.knowledge[k.id].p>=0&&s.knowledge[k.id].p<=1&&Number.isInteger(s.knowledge[k.id].n)&&s.knowledge[k.id].n>=0);}
-$('#file').onchange=async()=>{try{const file=$('#file').files[0];if(!file)return;if(file.size>20000000)throw Error('Máximo 20 MB');const data=JSON.parse(await file.text()),s=data.state||data;if(!valid(s))throw Error('Se esperaba una partida con eventos y conocimiento de seis habilidades');imported=s;$('#source').value='import';$('#source').onchange();$('#status').textContent='Registro importado para consulta; no se guardó sobre ninguna partida.';}catch(error){$('#status').textContent='No se pudo importar: '+error.message;}};
-$('#export').onclick=()=>{if(!selected)return;const payload={schema:'luma-laboratory-1',exportedAt:new Date().toISOString(),source:$('#source').value,state:selected,scenario:$('#source').value==='simulation'?result:null,batch};const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='isla-luma-laboratorio.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-setInterval(()=>{if(preview)render(read('isla-luma-simulation-v1'));else if($('#source').value==='live')render(read('isla-luma-v1'));},2000);
+function read(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key));
+  } catch {
+    return null;
+  }
+}
+function render(state) {
+  selected = state;
+  if (!state) {
+    $('#status').textContent = 'No hay un registro disponible para esta fuente.';
+    for (const id of ['metrics', 'decision', 'profiles', 'knowledge', 'timeline', 'events'])
+      $('#' + id).textContent = '';
+    return;
+  }
+  const events = state.events,
+    p = E.inferProfile(events, state.parent?.scores),
+    policy = E.sessionPolicy(events, state.simulationConfig || {}),
+    m = policy.metrics;
+  const active =
+    state.current?.experience || state.experienceChoice || p.dominant || 'estructurado';
+  const progress = E.progressSummary(state.knowledge, state.learning);
+  const metrics = [
+    ['Participación', m.engagement],
+    ['Necesidad de apoyo', m.supportNeed],
+    ['Ansiedad', m.anxiety],
+    [
+      'Aciertos recientes',
+      m.accuracy === null
+        ? 'Sin intentos'
+        : `${Math.round(m.accuracy * 100)}% (${m.attempts} intentos)`,
+    ],
+    [
+      'Latencia mediana',
+      m.medianLatencyMs === null
+        ? 'Sin datos'
+        : `${Math.round(m.medianLatencyMs / 1000)} s activos`,
+    ],
+    ['Señales recientes', `${m.errors} errores · ${m.hints} ayudas · ${m.idle} interrupciones`],
+    [
+      'Criterio bayesiano (no verifica CPA)',
+      `${progress.bayesianCount} / ${progress.total} habilidades`,
+    ],
+    [
+      'Recorrido CPA verificado',
+      `${progress.verifiedCount} / ${progress.total} habilidades${progress.legacy ? ' · registro anterior sin CPA verificada' : ''}`,
+    ],
+    [
+      'Origen',
+      state.simulation
+        ? `Sintético · ${state.simulatorVersion || E.POLICY.version}`
+        : $('#source').value === 'live'
+          ? 'Partida local'
+          : 'Registro importado',
+    ],
+  ];
+  $('#metrics').innerHTML = metrics
+    .map(([k, v]) => `<div class="metric">${esc(k)}<strong>${esc(v)}</strong></div>`)
+    .join('');
+  const skill = state.current?.task?.id || E.nextSkill(state.knowledge),
+    complete = progress.complete && !progress.legacy;
+  $('#decision').innerHTML =
+    `<p><b>${esc(E.experiences[active]?.name || active)}</b> · ${state.experienceChoice ? 'elección explícita' : p.dominant ? 'preferencia provisional' : 'opción inicial sin evidencia suficiente'}</p><p>Habilidad: ${esc(complete ? 'Recorrido CPA completado' : E.skills.find((k) => k.id === skill)?.name)}.</p><p>Apoyo sugerido para el siguiente reto: <b>${policy.support === 'concrete' ? 'piezas concretas · respuesta asistida' : 'representación visual'}</b>.</p><p>Descanso después de ${policy.breakAfterMs / 60000} minutos activos, al resolver el reto. Motivo: ${esc(reason[policy.reason])}.</p><p>Apoyo actual: ${state.current ? esc(state.current.supportMode || 'visual') : 'se asignará al abrir el reto'}. Fase: ${esc(state.phase)}. ${state.current?.assisted ? 'El reto actual cuenta como asistido.' : ''}</p><p>${p.observations} observaciones de preferencias. ${state.parent?.scores ? 'Con observación familiar (60/40 si es válida).' : 'Sin ponderación familiar.'}</p>`;
+  $('#profiles').innerHTML = E.profiles
+    .map(
+      (k) =>
+        `<div class="profile"><span>${k}</span><progress max="1" value="${p.combined[k]}"></progress><span>${Math.round(p.combined[k] * 100)}%</span></div>`,
+    )
+    .join('');
+  $('#knowledge').innerHTML =
+    '<table><tr><th>Habilidad</th><th>P estimada</th><th>Evidencias</th></tr>' +
+    E.skills
+      .map(
+        (k) =>
+          `<tr><td>${k.name}${E.mastered(state.knowledge[k.id]) ? ' ✓' : ''}</td><td>${Math.round(state.knowledge[k.id].p * 100)}%</td><td>${state.knowledge[k.id].n}</td></tr>`,
+      )
+      .join('') +
+    '</table><p>Probabilidad heurística, no porcentaje de aprendizaje validado. Reintentos y ayudas no acreditan dominio.</p>';
+  const rows =
+    $('#source').value === 'simulation' && !preview
+      ? result.timeline.slice(0, Number($('#step').value) + 1)
+      : events
+          .filter((e) => e.type === 'adaptation_decision' || e.type === 'task_presented')
+          .slice(-40)
+          .map((e, i) => ({
+            step: i,
+            mathMs: e.mathMs,
+            experience: e.data.experience || '—',
+            skill: e.data.skill,
+            policy: e.data.policy || e.data,
+          }));
+  $('#timeline').innerHTML = rows
+    .map(
+      (t) =>
+        `<tr><td>${t.step}</td><td>${Math.round((t.mathMs || 0) / 1000)} s</td><td>${esc(t.experience)}</td><td>${esc(t.skill)}</td><td>${esc(t.policy.support)}</td><td>${esc(reason[t.policy.reason] || t.policy.reason)}</td></tr>`,
+    )
+    .join('');
+
+  const outcomes = events.filter((e) => e.type === 'decision_evaluated').slice(-8);
+  $('#decision').innerHTML +=
+    `<h3>Comprobación pedagógica y circuito de respuesta</h3><p>${state.learning ? 'Secuencia CPA y transferencia contextual activas.' : 'Registro anterior: sin comprobaciones CPA registradas.'} La observación familiar sobre respuesta a la dificultad se conserva como contexto; no tiene peso validado.</p><table><tr><th>Habilidad</th><th>Etapas independientes</th><th>Próxima oportunidad sin ayuda</th></tr>${E.skills
+      .map((k) => {
+        const l = state.learning?.skills[k.id];
+        return `<tr><td>${esc(k.name)}</td><td>${esc(l?.legacyMastered ? 'Dominio anterior conservado; CPA no verificada' : l?.passed.join(', ') || 'Sin evidencia')}</td><td>${l?.probe ? 'Pendiente' : '—'}</td></tr>`;
+      })
+      .join('')}</table><h3>Decisión → respuesta posterior</h3>${
+      outcomes
+        .map((o) => {
+          const d = events.find((e) => e.id === o.data.decisionId);
+          return `<p>${esc(o.task)} · ${esc(d?.data.reason || 'Sin decisión enlazada (registro anterior)')} · ${esc(d?.data.stage || '—')} → ${o.data.independent ? 'resuelto sin ayuda' : 'resuelto con ayuda/reintento'} · ${d?.data.evidenceIds?.length || 0} señales enlazadas.</p>`;
+        })
+        .join('') || '<p>Sin resultados de decisiones registrados todavía.</p>'
+    }`;
+  $('#events').textContent = JSON.stringify(events.slice(-12), null, 2);
+}
+function step() {
+  stopPreview();
+  const i = Number($('#step').value);
+  $('#step-label').textContent =
+    `Paso ${i} de ${result.frames.length - 1} · ${result.timeline[i].label}`;
+  $('#previous').disabled = i === 0;
+  $('#next').disabled = i === result.frames.length - 1;
+  render(result.frames[i]);
+}
+function execute() {
+  stopPreview();
+  $('#source').value = 'simulation';
+  result = S.run($('#scenario').value, { pace: $('#pace').value });
+  $('#step').max = result.frames.length - 1;
+  $('#step').value = 0;
+  $('#replay').hidden = false;
+  $('#status').textContent =
+    `${result.scenario.name}: ${result.checks.filter((c) => c.pass).length}/${result.checks.length} verificaciones aprobadas. Recorre los pasos o prueba uno en el juego.`;
+  step();
+}
+$('#run').onclick = execute;
+$('#step').oninput = step;
+$('#previous').onclick = () => {
+  $('#step').value = Number($('#step').value) - 1;
+  step();
+};
+$('#next').onclick = () => {
+  $('#step').value = Number($('#step').value) + 1;
+  step();
+};
+$('#suite').onclick = () => {
+  batch = S.scenarios.map((s) => S.run(s.id, { pace: $('#pace').value }));
+  $('#suite-results').innerHTML =
+    '<h2>Verificaciones de guiones sintéticos</h2>' +
+    batch
+      .map(
+        (r) =>
+          `<p class="${r.checks.every((c) => c.pass) ? 'pass' : 'fail'}">${esc(r.scenario.name)}: ${r.checks.filter((c) => c.pass).length}/${r.checks.length} · ${
+            r.checks
+              .filter((c) => !c.pass)
+              .map((c) => esc(c.name))
+              .join(', ') || 'aprobado'
+          }</p>`,
+      )
+      .join('');
+  $('#status').textContent =
+    'Lote ejecutado. La exportación incluye los 12 resultados y sus comprobaciones.';
+};
+$('#source').onchange = () => {
+  stopPreview();
+  $('#replay').hidden = $('#source').value !== 'simulation';
+  if ($('#source').value === 'simulation') execute();
+  else {
+    render($('#source').value === 'live' ? read('isla-luma-v1') : imported);
+    if (selected)
+      $('#status').textContent = 'Consulta de solo lectura. Actualización local cada 2 segundos.';
+  }
+};
+$('#preview').onclick = () => {
+  try {
+    stopPreview();
+    localStorage.setItem('isla-luma-simulation-v1', JSON.stringify(selected));
+    preview = true;
+    $('#preview-panel').hidden = false;
+    $('#game').src = './?simulation=1';
+    $('#status').textContent = 'Vista jugable activa: los indicadores siguen la partida de prueba.';
+  } catch (error) {
+    $('#status').textContent = 'No se pudo abrir la simulación: ' + error.message;
+  }
+};
+function valid(s) {
+  return (
+    s &&
+    Array.isArray(s.events) &&
+    s.events.length <= 100000 &&
+    s.events.every(
+      (e) => e && typeof e.type === 'string' && e.data && typeof e.data === 'object',
+    ) &&
+    E.skills.every(
+      (k) =>
+        s.knowledge?.[k.id] &&
+        Number.isFinite(s.knowledge[k.id].p) &&
+        s.knowledge[k.id].p >= 0 &&
+        s.knowledge[k.id].p <= 1 &&
+        Number.isInteger(s.knowledge[k.id].n) &&
+        s.knowledge[k.id].n >= 0,
+    )
+  );
+}
+$('#file').onchange = async () => {
+  try {
+    const file = $('#file').files[0];
+    if (!file) return;
+    if (file.size > 20000000) throw Error('Máximo 20 MB');
+    const data = JSON.parse(await file.text()),
+      s = data.state || data;
+    if (!valid(s))
+      throw Error('Se esperaba una partida con eventos y conocimiento de seis habilidades');
+    imported = s;
+    $('#source').value = 'import';
+    $('#source').onchange();
+    $('#status').textContent =
+      'Registro importado para consulta; no se guardó sobre ninguna partida.';
+  } catch (error) {
+    $('#status').textContent = 'No se pudo importar: ' + error.message;
+  }
+};
+$('#export').onclick = () => {
+  if (!selected) return;
+  const payload = {
+    schema: 'luma-laboratory-1',
+    exportedAt: new Date().toISOString(),
+    source: $('#source').value,
+    state: selected,
+    scenario: $('#source').value === 'simulation' ? result : null,
+    batch,
+  };
+  const url = URL.createObjectURL(
+      new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }),
+    ),
+    a = document.createElement('a');
+  a.href = url;
+  a.download = 'isla-luma-laboratorio.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+setInterval(() => {
+  if (preview) render(read('isla-luma-simulation-v1'));
+  else if ($('#source').value === 'live') render(read('isla-luma-v1'));
+}, 2000);
 execute();

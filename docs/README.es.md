@@ -18,7 +18,7 @@
 
 ## Empezar
 
-Con Node.js 22 o posterior:
+Con Node.js 22.13 o posterior:
 
 ```sh
 git clone https://github.com/cristhianvs/lumasprout.git
@@ -41,3 +41,5 @@ Faltan revisión docente, evaluación externa y piloto observado. Precisamente p
 Revisa las [tareas iniciales](ROADMAP.md#starter-tasks) y la [guía para contribuir](../CONTRIBUTING.md). Hay espacio para mejoras pequeñas: accesibilidad, traducción, tareas matemáticas, contratos de telemetría o documentación reproducible. Se aceptan aportaciones en español e inglés.
 
 Licencia [MIT](../LICENSE) para el código y los recursos originales. Creado por [Cristhian Velazco](https://github.com/cristhianvs).
+
+[Version history / Historial de versiones — v0.2.0](../CHANGELOG.md)

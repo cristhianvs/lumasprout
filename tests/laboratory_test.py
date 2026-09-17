@@ -6,14 +6,14 @@ from playwright.sync_api import sync_playwright, expect
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'output' / 'simulations'
-BASE = 'http://127.0.0.1:4173'
+from browser_config import BASE, BROWSER_CHANNEL
 
 class LaboratoryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         OUT.mkdir(parents=True, exist_ok=True)
         cls.pw = sync_playwright().start()
-        cls.browser = cls.pw.chromium.launch(channel='chrome', headless=True)
+        cls.browser = cls.pw.chromium.launch(channel=BROWSER_CHANNEL, headless=True)
 
     @classmethod
     def tearDownClass(cls):

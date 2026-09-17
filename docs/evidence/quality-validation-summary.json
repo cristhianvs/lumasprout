@@ -1,0 +1,281 @@
+{
+  "generatedAt": "2026-09-17T18:29:39.395675+00:00",
+  "scope": "Technical simulations and regression tests; no child participants",
+  "sourceHash": "135dd307b0470f336fe6453a3023630c24b588463f99a0b9ef046d95495ae30e",
+  "regressions": {
+    "node": 44,
+    "browser": 14,
+    "profiles": 7,
+    "pedagogy": 5,
+    "laboratory": 5
+  },
+  "regressionCount": 75,
+  "matrix": {
+    "passed": 36,
+    "independentCompletions": 32,
+    "breakCompletions": 4,
+    "events": 15530,
+    "attempts": 856,
+    "assertions": 12764,
+    "clock": "virtual active time; general browser suite also includes real-clock UI journey",
+    "results": [
+      {
+        "profile": "estructurado",
+        "behavior": "baseline",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "estructurado",
+        "behavior": "recovery",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "estructurado",
+        "behavior": "slow",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "estructurado",
+        "behavior": "interruptions",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "estructurado",
+        "behavior": "assisted",
+        "status": "passed",
+        "completionReason": "break",
+        "mastered": 0
+      },
+      {
+        "profile": "estructurado",
+        "behavior": "no_audio",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "estructurado",
+        "behavior": "mixed",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "estructurado",
+        "behavior": "family",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "estructurado",
+        "behavior": "override",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "visual",
+        "behavior": "baseline",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "visual",
+        "behavior": "recovery",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "visual",
+        "behavior": "slow",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "visual",
+        "behavior": "interruptions",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "visual",
+        "behavior": "assisted",
+        "status": "passed",
+        "completionReason": "break",
+        "mastered": 0
+      },
+      {
+        "profile": "visual",
+        "behavior": "no_audio",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "visual",
+        "behavior": "mixed",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "visual",
+        "behavior": "family",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "visual",
+        "behavior": "override",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "auditivo",
+        "behavior": "baseline",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "auditivo",
+        "behavior": "recovery",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "auditivo",
+        "behavior": "slow",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "auditivo",
+        "behavior": "interruptions",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "auditivo",
+        "behavior": "assisted",
+        "status": "passed",
+        "completionReason": "break",
+        "mastered": 0
+      },
+      {
+        "profile": "auditivo",
+        "behavior": "no_audio",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "auditivo",
+        "behavior": "mixed",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "auditivo",
+        "behavior": "family",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "auditivo",
+        "behavior": "override",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "explorador",
+        "behavior": "baseline",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "explorador",
+        "behavior": "recovery",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "explorador",
+        "behavior": "slow",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "explorador",
+        "behavior": "interruptions",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "explorador",
+        "behavior": "assisted",
+        "status": "passed",
+        "completionReason": "break",
+        "mastered": 0
+      },
+      {
+        "profile": "explorador",
+        "behavior": "no_audio",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "explorador",
+        "behavior": "mixed",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "explorador",
+        "behavior": "family",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      },
+      {
+        "profile": "explorador",
+        "behavior": "override",
+        "status": "passed",
+        "completionReason": "mastery",
+        "mastered": 6
+      }
+    ]
+  },
+  "limits": [
+    "No human efficacy or anxiety validation",
+    "Whole-save persistence remains; no large-session performance claim",
+    "UI/audio decomposition remains incremental"
+  ]
+}

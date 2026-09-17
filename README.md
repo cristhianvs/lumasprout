@@ -34,7 +34,7 @@ We’re building for curious learners **and** curious developers: plain JavaScri
 
 ## Try it in a minute
 
-Use **Node.js 22 or newer**:
+Use **Node.js 22.13 or newer**:
 
 ```sh
 git clone https://github.com/cristhianvs/lumasprout.git
@@ -117,3 +117,5 @@ Build the public site with `npm run build:site`; the curated `dist/` contains th
 Original project code and original marketing assets are released under the [MIT license](LICENSE). Research PDFs and third-party material are not redistributed or relicensed here. See [asset provenance](assets/README.md).
 
 Created by [Cristhian Velazco](https://github.com/cristhianvs). **Help grow the next discovery.**
+
+[Version history / Historial de versiones — v0.2.0](CHANGELOG.md)

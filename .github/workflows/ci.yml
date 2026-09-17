@@ -13,6 +13,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm test
+      - run: npm ci --ignore-scripts
+      - run: npm run check
       - run: npm run build:site
       - run: node --check app.js && node --check admin.js
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -r requirements-dev.txt
+      - run: python -m playwright install --with-deps chromium
+      - name: Browser regression checks
+        env:
+          LUMA_BROWSER_CHANNEL: ''
+        run: |
+          node server.cjs > /tmp/lumasprout-server.log 2>&1 &
+          python -X utf8 scripts/validate.py pedagogy
+          python -X utf8 scripts/validate.py laboratory
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: validation
+          path: output/

@@ -14,7 +14,7 @@ from playwright.sync_api import sync_playwright, expect
 
 ROOT = Path(__file__).resolve().parents[1]
 ARTIFACTS = ROOT / 'output' / 'playwright'
-BASE = 'http://127.0.0.1:4173'
+from browser_config import BASE, BROWSER_CHANNEL
 
 
 class BrowserTests(unittest.TestCase):
@@ -22,7 +22,7 @@ class BrowserTests(unittest.TestCase):
     def setUpClass(cls):
         ARTIFACTS.mkdir(parents=True, exist_ok=True)
         cls.pw = sync_playwright().start()
-        cls.browser = cls.pw.chromium.launch(channel='chrome', headless=True)
+        cls.browser = cls.pw.chromium.launch(channel=BROWSER_CHANNEL, headless=True)
         print(f'\nChrome real: {cls.browser.version}', flush=True)
 
     @classmethod
@@ -160,10 +160,11 @@ class BrowserTests(unittest.TestCase):
                 label = self.page.locator('.scene .bar').first.get_attribute('aria-label')
                 n,d = map(int,re.findall(r'\d+',label))
                 answer = f'{n}/{d}'
-            elif self.page.locator('.equation').inner_text().find('?\n8') >= 0:
+            elif self.page.locator('#answer-form label').inner_text().startswith('Escribe tu respuesta con denominador'):
                 parts = self.page.locator('.equation .fraction').first.locator('span').all_inner_texts()
                 n,d = map(int,parts)
-                answer = f'{n*8//d}/8'
+                target=int(re.search(r'\d+',self.page.locator('#answer-form label').inner_text()).group())
+                answer = f'{n*target//d}/{target}'
             else:
                 parts = self.page.locator('.equation .fraction').all_inner_texts()
                 a,b = [Fraction(*map(int,part.split())) for part in parts]
@@ -400,9 +401,10 @@ class BrowserTests(unittest.TestCase):
                 label=self.page.locator('.scene .bar').first.get_attribute('aria-label')
                 n,d=map(int,re.findall(r'\d+',label))
                 answer=f'{n}/{d}'
-            elif self.page.get_by_text('Escribe tu respuesta con denominador 8.',exact=True).count():
+            elif self.page.locator('#answer-form label').inner_text().startswith('Escribe tu respuesta con denominador'):
                 n,d=map(int,self.page.locator('.equation .fraction').first.locator('span').all_inner_texts())
-                answer=f'{n*8//d}/8'
+                target=int(re.search(r'\d+',self.page.locator('#answer-form label').inner_text()).group())
+                answer=f'{n*target//d}/{target}'
             else:
                 a,b=[Fraction(*map(int,part.split())) for part in self.page.locator('.equation .fraction').all_inner_texts()]
                 value=a-b if '−' in self.page.locator('.equation').inner_text() else a+b

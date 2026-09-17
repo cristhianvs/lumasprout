@@ -1,14 +1,119 @@
 <!doctype html>
-<html lang="es-MX"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Isla Luma · Laboratorio de simulación</title><link rel="stylesheet" href="admin.css"></head>
-<body><header><div><small>ISLA LUMA / OBSERVACIÓN Y PRUEBAS</small><h1>Laboratorio de adaptación</h1></div><a href="./" target="_blank" rel="noopener">Abrir la isla ↗</a></header>
-<main><p class="notice">Simulación técnica, sin participantes reales. Las preferencias son provisionales. Ansiedad: no inferible con estos registros. Este tablero es local, sin cuentas ni monitoreo de otros dispositivos.</p>
-<section class="controls"><label>Fuente<select id="source"><option value="simulation">Escenarios sintéticos</option><option value="live">Partida local · solo lectura</option><option value="import">Registro importado · solo lectura</option></select></label><label>Escenario<select id="scenario"></select></label><label>Ritmo de prueba<select id="pace"><option value="standard">Adaptación habitual</option><option value="gentle">Descanso a los 4 minutos activos</option></select></label><button id="run">Ejecutar escenario</button><button id="suite">Ejecutar los 12</button><button id="export">Exportar resultado JSON</button><label class="upload">Importar registro JSON<input id="file" type="file" accept="application/json,.json"></label></section>
-<p id="status" role="status"></p><section id="suite-results" aria-label="Resultados de escenarios"></section>
-<section id="replay"><div class="controls"><button id="previous">← Paso anterior</button><button id="next">Paso siguiente →</button><label>Punto del recorrido<input id="step" type="range" min="0" value="0"></label><button id="preview">Probar este punto en el juego</button></div><p id="step-label"></p></section>
-<section id="metrics" class="metrics" aria-label="Indicadores"></section>
-<div class="columns"><section><h2>Decisión y retroalimentación</h2><div id="decision"></div><h3>Preferencias observadas</h3><div id="profiles"></div></section><section><h2>Evidencia matemática</h2><div id="knowledge"></div></section></div>
-<section><h2>Circuito de adaptación</h2><p>Eventos → señales recientes y preferencias → selección por prerrequisitos → modalidad y apoyo → nueva respuesta. La elección explícita tiene prioridad. El descanso se propone al terminar un reto; no hay límite para contestar.</p><p>Ventana de señales: 120 segundos activos y hasta 20 eventos relevantes de la fase actual. Cuatro errores o peticiones de ayuda activan apoyo concreto. La inactividad describe una interrupción; no demuestra desinterés.</p><p>El ritmo de prueba solo modifica la simulación. No cambia la partida local. Las respuestas sintéticas son guiones deterministas, no un modelo validado de conducta o aprendizaje.</p></section>
-<section><h2>Historial de decisiones</h2><div class="scroll"><table><thead><tr><th>Paso</th><th>Tiempo activo</th><th>Modalidad</th><th>Habilidad siguiente</th><th>Apoyo</th><th>Motivo</th></tr></thead><tbody id="timeline"></tbody></table></div></section>
-<section><h2>Eventos recientes</h2><pre id="events"></pre></section>
-<section id="preview-panel" hidden><h2>Juego de prueba · almacenamiento separado</h2><p>Interactúa para comprobar el siguiente ciclo. Los indicadores se actualizan con esta partida de prueba. Elegir otro paso detiene esta vista; volver a probar reemplaza únicamente la simulación.</p><iframe id="game" title="Partida simulada de Isla Luma"></iframe></section>
-</main><script src="engine.js"></script><script src="simulation.js"></script><script src="admin.js"></script></body></html>
+<html lang="es-MX">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Isla Luma · Laboratorio de simulación</title>
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <small>ISLA LUMA / OBSERVACIÓN Y PRUEBAS</small>
+        <h1>Laboratorio de adaptación</h1>
+      </div>
+      <a href="./" target="_blank" rel="noopener">Abrir la isla ↗</a>
+    </header>
+    <main>
+      <p class="notice">
+        Simulación técnica, sin participantes reales. Las preferencias son provisionales. Ansiedad:
+        no inferible con estos registros. Este tablero es local, sin cuentas ni monitoreo de otros
+        dispositivos.
+      </p>
+      <section class="controls">
+        <label
+          >Fuente<select id="source">
+            <option value="simulation">Escenarios sintéticos</option>
+            <option value="live">Partida local · solo lectura</option>
+            <option value="import">Registro importado · solo lectura</option>
+          </select></label
+        ><label>Escenario<select id="scenario"></select></label
+        ><label
+          >Ritmo de prueba<select id="pace">
+            <option value="standard">Adaptación habitual</option>
+            <option value="gentle">Descanso a los 4 minutos activos</option>
+          </select></label
+        ><button id="run">Ejecutar escenario</button><button id="suite">Ejecutar los 12</button
+        ><button id="export">Exportar resultado JSON</button
+        ><label class="upload"
+          >Importar registro JSON<input id="file" type="file" accept="application/json,.json"
+        /></label>
+      </section>
+      <p id="status" role="status"></p>
+      <section id="suite-results" aria-label="Resultados de escenarios"></section>
+      <section id="replay">
+        <div class="controls">
+          <button id="previous">← Paso anterior</button><button id="next">Paso siguiente →</button
+          ><label>Punto del recorrido<input id="step" type="range" min="0" value="0" /></label
+          ><button id="preview">Probar este punto en el juego</button>
+        </div>
+        <p id="step-label"></p>
+      </section>
+      <section id="metrics" class="metrics" aria-label="Indicadores"></section>
+      <div class="columns">
+        <section>
+          <h2>Decisión y retroalimentación</h2>
+          <div id="decision"></div>
+          <h3>Preferencias observadas</h3>
+          <div id="profiles"></div>
+        </section>
+        <section>
+          <h2>Evidencia matemática</h2>
+          <div id="knowledge"></div>
+        </section>
+      </div>
+      <section>
+        <h2>Circuito de adaptación</h2>
+        <p>
+          Eventos → señales recientes y preferencias → selección por prerrequisitos → modalidad y
+          apoyo → nueva respuesta. La elección explícita tiene prioridad. El descanso se propone al
+          terminar un reto; no hay límite para contestar.
+        </p>
+        <p>
+          Ventana de señales: 120 segundos activos y hasta 20 eventos relevantes de la fase actual.
+          Cuatro errores o peticiones de ayuda activan apoyo concreto. La inactividad describe una
+          interrupción; no demuestra desinterés.
+        </p>
+        <p>
+          El ritmo de prueba solo modifica la simulación. No cambia la partida local. Las respuestas
+          sintéticas son guiones deterministas, no un modelo validado de conducta o aprendizaje.
+        </p>
+      </section>
+      <section>
+        <h2>Historial de decisiones</h2>
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Paso</th>
+                <th>Tiempo activo</th>
+                <th>Modalidad</th>
+                <th>Habilidad siguiente</th>
+                <th>Apoyo</th>
+                <th>Motivo</th>
+              </tr>
+            </thead>
+            <tbody id="timeline"></tbody>
+          </table>
+        </div>
+      </section>
+      <section>
+        <h2>Eventos recientes</h2>
+        <pre id="events"></pre>
+      </section>
+      <section id="preview-panel" hidden>
+        <h2>Juego de prueba · almacenamiento separado</h2>
+        <p>
+          Interactúa para comprobar el siguiente ciclo. Los indicadores se actualizan con esta
+          partida de prueba. Elegir otro paso detiene esta vista; volver a probar reemplaza
+          únicamente la simulación.
+        </p>
+        <iframe id="game" title="Partida simulada de Isla Luma"></iframe>
+      </section>
+    </main>
+    <script src="runtime.js"></script>
+    <script src="engine.js"></script>
+    <script src="simulation.js"></script>
+    <script src="admin.js"></script>
+  </body>
+</html>

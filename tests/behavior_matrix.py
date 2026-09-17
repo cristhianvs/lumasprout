@@ -3,6 +3,7 @@
 The virtual clock models active reading and pauses; it is not human observation.
 Answers are computed from visible panels using Python fractions (profiles_test).
 """
+import sys
 import argparse
 import hashlib
 import json
@@ -14,7 +15,9 @@ from playwright.sync_api import sync_playwright, expect
 from profiles_test import ProfileTests
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE = 'http://127.0.0.1:4173'
+sys.path.insert(0, str(ROOT / 'scripts'))
+from validate import source_hash
+from browser_config import BASE, BROWSER_CHANNEL
 PROFILES = ['estructurado', 'visual', 'auditivo', 'explorador']
 BEHAVIORS = ['baseline', 'recovery', 'slow', 'interruptions', 'assisted', 'no_audio', 'mixed', 'family', 'override']
 PARENTS = {'meaning': [], 'equivalent': ['meaning'], 'add_same': ['meaning'], 'sub_same': ['meaning'], 'add_diff': ['equivalent', 'add_same'], 'sub_diff': ['equivalent', 'sub_same']}
@@ -28,6 +31,8 @@ class Run:
     answer_from_screen = ProfileTests.answer_from_screen
 
     def __init__(self, browser, profile, behavior, out):
+        self.source_hash = source_hash()
+        self.started_at = datetime.now(timezone.utc).isoformat()
         self.profile, self.behavior = profile, behavior
         self.out = out / f'{profile}-{behavior}'
         self.out.mkdir(parents=True, exist_ok=True)
@@ -284,7 +289,7 @@ class Run:
         (self.out/'checkpoints.json').write_text(json.dumps(self.checkpoints,ensure_ascii=False,indent=2),encoding='utf8')
         self.page.screenshot(path=str(self.out/'last-screen.png'),full_page=True)
         self.context.tracing.stop(path=str(self.out/'trace.zip'))
-        summary={'profile':self.profile,'behavior':self.behavior,'status':status,'error':error,'wallSeconds':round(wall_seconds,2),'clock':'virtual; UI events only; no seeded state','browser':self.context.browser.version,'phase':state['phase'],'completionReason':state.get('completionReason'),'events':len(state['events']),'mathActiveSeconds':round(state['mathMs']/1000,2),'mastered':sum(mastered(k) for k in state['knowledge'].values()),'attempts':sum(e['type']=='attempt' and e['phase']=='math' for e in state['events']),'errors':sum(e['type']=='attempt' and e['phase']=='math' and not e['data']['correct'] for e in state['events']),'hints':sum(e['type']=='hint_requested' for e in state['events']),'breaks':sum(e['type']=='break_suggested' for e in state['events']),'idle':sum(e['type']=='idle_started' for e in state['events']),'checks':self.checks,'artifacts':str(self.out.relative_to(ROOT)),'telemetrySha256':hashlib.sha256((self.out/'telemetry.json').read_bytes()).hexdigest()}
+        summary={'sourceHash':self.source_hash,'startedAt':self.started_at,'finishedAt':datetime.now(timezone.utc).isoformat(),'sourceUnchanged':self.source_hash==source_hash(),'profile':self.profile,'behavior':self.behavior,'status':status,'error':error,'wallSeconds':round(wall_seconds,2),'clock':'virtual; UI events only; no seeded state','browser':self.context.browser.version,'phase':state['phase'],'completionReason':state.get('completionReason'),'events':len(state['events']),'mathActiveSeconds':round(state['mathMs']/1000,2),'mastered':sum(mastered(k) for k in state['knowledge'].values()),'attempts':sum(e['type']=='attempt' and e['phase']=='math' for e in state['events']),'errors':sum(e['type']=='attempt' and e['phase']=='math' and not e['data']['correct'] for e in state['events']),'hints':sum(e['type']=='hint_requested' for e in state['events']),'breaks':sum(e['type']=='break_suggested' for e in state['events']),'idle':sum(e['type']=='idle_started' for e in state['events']),'checks':self.checks,'artifacts':str(self.out.relative_to(ROOT)),'telemetrySha256':hashlib.sha256((self.out/'telemetry.json').read_bytes()).hexdigest()}
         (self.out/'result.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2),encoding='utf8')
         self.context.close()
         return summary
@@ -299,7 +304,7 @@ def main():
     out.mkdir(parents=True,exist_ok=True)
     results=[]
     with sync_playwright() as pw:
-        browser=pw.chromium.launch(channel='chrome',headless=True)
+        browser=pw.chromium.launch(channel=BROWSER_CHANNEL,headless=True)
         for behavior in args.behaviors:
             start=time.monotonic()
             run=Run(browser,args.profile,behavior,out)
