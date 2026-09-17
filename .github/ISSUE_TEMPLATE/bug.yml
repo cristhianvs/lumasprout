@@ -1,0 +1,19 @@
+name: Bug report
+description: A reproducible problem in the game, lab or developer setup
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include expected behavior and reproduction steps. Use synthetic data only.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser, operating system and screen size
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Screenshots or error messages without personal data, secrets or participant exports.

@@ -1,0 +1,19 @@
+{
+  "name": "lumasprout",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An open-source learning adventure with explainable adaptation",
+  "license": "MIT",
+  "engines": {"node": ">=22"},
+  "repository": {"type": "git", "url": "https://github.com/cristhianvs/lumasprout.git"},
+  "scripts": {
+    "test": "node --test tests/*.test.cjs",
+    "test:browser": "python tests/browser_test.py",
+    "test:profiles": "python tests/profiles_test.py",
+    "simulate": "node tests/run_simulations.cjs",
+    "test:lab": "python tests/laboratory_test.py",
+    "start": "node server.cjs",
+    "test:pedagogy": "python -X utf8 tests/pedagogy_test.py",
+    "build:site": "node scripts/build-site.cjs"
+  }
+}

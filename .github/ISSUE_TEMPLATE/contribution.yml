@@ -1,0 +1,21 @@
+name: Contribution proposal
+description: Suggest a focused improvement or volunteer for a starter task
+body:
+  - type: textarea
+    id: change
+    attributes:
+      label: What would you like to improve?
+      description: Explain who benefits and the smallest useful change. Spanish or English welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: How would we verify it?
+      description: Propose concrete acceptance criteria and tests.
+  - type: checkboxes
+    id: ownership
+    attributes:
+      label: Participation
+      options:
+        - label: I would like to work on this contribution.

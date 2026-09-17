@@ -1,0 +1,16 @@
+node_modules/
+.npm-cache/
+output/
+tmp/
+dist/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.venv/
+venv/
+Investigación Gamificación Matemática Personalizada.pdf
+docs/CONTEXTO_ACTUAL.md
+AGENTS.md
+__pycache__/
