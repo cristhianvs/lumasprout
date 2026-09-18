@@ -8,7 +8,8 @@
   // avanzar el cursor cuando el servidor confirma la recepcion.
   //
   // El juego nunca debe romperse por la red: toda llamada de red va envuelta
-  // en try/catch y ningun fallo aqui detiene el bucle del juego.
+  // en try/catch, tiene un limite de tiempo (ver REQUEST_TIMEOUT) y ningun
+  // fallo aqui detiene el bucle del juego.
   const STATES = Object.freeze({
     DISABLED: 'desactivado',
     CONNECTING: 'conectando',
@@ -19,46 +20,76 @@
   const HTTP_UNAUTHORIZED = 401;
   const HTTP_FORBIDDEN = 403;
   const BACKOFF_JITTER_RATIO = 0.2;
+  const DEFAULT_REQUEST_TIMEOUT_MS = 12000;
   // Motivos expuestos en getStatus().reason cuando state es 'error'. No son
   // texto para el jugador: son para quien lea el estado de conexion.
   const REASONS = Object.freeze({
     SIN_FETCH: 'no hay una implementacion de fetch disponible',
     SESION_INVALIDA: 'la respuesta del servidor al abrir sesion no trae un token valido',
     TOKEN_RECHAZADO: 'el servidor rechazo el token de esta partida',
-    FALLO_RED: 'fallo de red al intentar enviar telemetria',
+    FALLO_RED: 'fallo de red (o tiempo de espera agotado) al intentar enviar telemetria',
+    CONFIRMACION_INVALIDA:
+      'la respuesta del servidor a un envio de eventos no trae un ultimoIndice valido',
     // Limitacion conocida: runtime.js guarda el estado COMPLETO en cada save,
     // asi que dos pestanas sobre la misma partida se pisan entre si. Si el
     // servidor confirma (o el estado cargado ya trae) mas eventos de los que
-    // existen localmente, es la senal de ese conflicto. No se intenta
-    // resolver: no se reenvia ni se borra nada, solo se deja de enviar hasta
-    // que el arreglo local vuelva a alcanzar (o supere) lo que el servidor
-    // ya tiene, momento en el que el envio se reanuda solo.
-    POSIBLE_MULTIPLES_PESTANAS:
+    // existen localmente -o un evento que no coincide con el que el servidor
+    // dice tener en esa posicion- es la senal de ese conflicto. No se
+    // intenta resolver: no se reenvia ni se borra nada, solo se deja de
+    // enviar hasta que el arreglo local vuelva a alcanzar (y coincidir con)
+    // lo que el servidor ya tiene, momento en el que el envio se reanuda
+    // solo.
+    POSIBLE_MULTIPLES_PESTANAS_CONTEO:
       'el servidor (o el estado guardado) confirma mas eventos de los que existen localmente; posible partida abierta en otra pestana',
+    POSIBLE_MULTIPLES_PESTANAS_IDENTIDAD:
+      'el evento local en la posicion confirmada no coincide con el que el servidor dice haber guardado; posible partida abierta en otra pestana',
   });
 
   function normalizeCursor(value) {
     return Number.isInteger(value) ? value : -1;
   }
 
+  // Un ultimoIndice valido es -1 (nada confirmado) o un entero de posicion.
+  // No exige que este dentro del arreglo local: eso es la comprobacion de
+  // divergencia (tryAdvanceCursor), un problema distinto a la validez de
+  // FORMA de la respuesta.
+  function isValidUltimoIndice(value) {
+    return Number.isInteger(value) && value >= -1;
+  }
+
   function estimateBytes(value) {
     try {
-      return JSON.stringify(value).length;
+      const json = JSON.stringify(value);
+      // Bytes UTF-8 reales, no unidades UTF-16 de la cadena: un caracter
+      // acentuado o una tilde ocupan 2 bytes en la peticion real aunque
+      // .length los cuente como 1.
+      return typeof TextEncoder !== 'undefined'
+        ? new TextEncoder().encode(json).length
+        : json.length;
     } catch {
       return Infinity;
     }
   }
 
   // Construye un unico lote a partir del cursor, respetando los limites de
-  // cantidad y de tamano. Si quedan mas eventos pendientes de los que caben,
-  // el resto se envia en el siguiente tick: asi es como se "parte" un lote
-  // que excede los limites, sin bloquear el bucle de envio.
-  function buildBatch(events, cursor, maxCount, maxBytes) {
+  // cantidad y de tamano. `envelopeBytes` es el peso (en bytes reales) de
+  // todo lo que rodea al arreglo de eventos en la peticion (runId, la
+  // estructura JSON, y el token cuando viaja en el cuerpo): sin contarlo, el
+  // presupuesto de bytes subestima el tamano real de la peticion.
+  //
+  // Si quedan mas eventos pendientes de los que caben, el resto se envia en
+  // el siguiente tick: asi es como se "parte" un lote que excede los
+  // limites, sin bloquear el bucle de envio. Decision explicita: un evento
+  // que por si solo (sumado al envoltorio) ya supera maxBytes NO se descarta
+  // en silencio ni se deja atascado para siempre; se envia solo, aceptando
+  // el exceso sobre el limite. La alternativa (marcarlo como no enviable)
+  // dejaria ese evento sin poder salir nunca del cliente.
+  function buildBatch(events, cursor, maxCount, maxBytes, envelopeBytes = 0) {
     const batch = [];
-    let bytes = 2; // '[' + ']'
+    let bytes = envelopeBytes;
     for (let i = cursor + 1; i < events.length && batch.length < maxCount; i++) {
       const event = events[i];
-      const size = estimateBytes(event) + 1; // + separador
+      const size = estimateBytes(event) + 1; // + separador entre elementos
       if (batch.length > 0 && bytes + size > maxBytes) break;
       batch.push(event);
       bytes += size;
@@ -104,6 +135,8 @@
     const now = options.now || (() => Date.now());
     const setIntervalImpl = options.setInterval || setInterval;
     const clearIntervalImpl = options.clearInterval || clearInterval;
+    const setTimeoutImpl = options.setTimeout || setTimeout;
+    const clearTimeoutImpl = options.clearTimeout || clearTimeout;
     const random = options.random || Math.random;
     const onStatusChange =
       typeof options.onStatusChange === 'function' ? options.onStatusChange : () => {};
@@ -116,6 +149,7 @@
     const maxBatchBytes = config.maxBatchBytes || 1000000;
     const minBackoffMs = config.minBackoffMs || 1000;
     const maxBackoffMs = config.maxBackoffMs || 60000;
+    const requestTimeoutMs = config.requestTimeoutMs || DEFAULT_REQUEST_TIMEOUT_MS;
 
     let status = STATES.CONNECTING;
     let statusReason = null;
@@ -136,21 +170,65 @@
       return Math.max(0, events.length - 1 - cursor);
     }
 
+    // Envuelve fetchImpl con un limite de tiempo real. Dos mecanismos a la
+    // vez: un AbortController (para que un fetch real libere la conexion) y
+    // una carrera contra un temporizador (para que incluso una
+    // implementacion de fetch que ignore la senal de aborto -algo comun en
+    // mocks de prueba, y posible en polyfills- deje de colgar el ciclo de
+    // envio para siempre). Sin esto, una peticion pendiente nunca libera
+    // `sending` y los ticks siguientes dejan de intentar nada.
+    function fetchWithTimeout(url, requestOptions) {
+      if (!fetchImpl) return Promise.reject(new Error(REASONS.SIN_FETCH));
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      let timer;
+      const timeout = new Promise((_, reject) => {
+        timer = setTimeoutImpl(() => {
+          if (controller) controller.abort();
+          reject(new Error('tiempo de espera agotado'));
+        }, requestTimeoutMs);
+      });
+      const request = Promise.resolve(
+        fetchImpl(
+          url,
+          controller ? { ...requestOptions, signal: controller.signal } : requestOptions,
+        ),
+      );
+      return Promise.race([request, timeout]).finally(() => clearTimeoutImpl(timer));
+    }
+
     // Unico punto que mueve state.enviadoHasta. Nunca lo retrocede (ignora
     // candidatos menores o iguales al cursor actual) y nunca lo adelanta mas
     // alla de los eventos que existen localmente: si el candidato (del
     // servidor, o el que ya venia guardado) supera lo que hay en memoria,
-    // se reporta como divergencia en vez de adoptarlo. Adoptarlo a ciegas
-    // marcaria como "ya enviados" eventos locales que en realidad todavia
-    // no coinciden con lo que el servidor tiene bajo esos indices.
-    function tryAdvanceCursor(candidate) {
+    // se reporta como divergencia en vez de adoptarlo. Cuando el servidor
+    // manda ademas el id del evento que confirma en esa posicion
+    // (expectedEventId), se exige que coincida con el evento local: dos
+    // ramas de igual longitud (o una rama local que alcanzo la longitud
+    // remota) pueden tener contenidos distintos bajo el mismo indice, y solo
+    // comparar cantidades no lo detecta. Si expectedEventId no viene (el
+    // servidor todavia no lo manda), se tolera su ausencia y se conserva el
+    // comportamiento anterior basado solo en cantidad.
+    function tryAdvanceCursor(candidate, expectedEventId) {
       const events = adapter.getEvents();
       const localCursor = normalizeCursor(adapter.getCursor());
       const value = normalizeCursor(candidate);
       if (value <= localCursor) return { advanced: false, diverged: false };
-      if (value > events.length - 1) return { advanced: false, diverged: true };
+      if (value > events.length - 1)
+        return { advanced: false, diverged: true, reasonKey: 'conteo' };
+      if (expectedEventId !== undefined && expectedEventId !== null) {
+        const localEvent = events[value];
+        if (!localEvent || localEvent.id !== expectedEventId) {
+          return { advanced: false, diverged: true, reasonKey: 'identidad' };
+        }
+      }
       adapter.setCursor(value);
       return { advanced: true, diverged: false };
+    }
+
+    function divergenceReason(reasonKey) {
+      return reasonKey === 'identidad'
+        ? REASONS.POSIBLE_MULTIPLES_PESTANAS_IDENTIDAD
+        : REASONS.POSIBLE_MULTIPLES_PESTANAS_CONTEO;
     }
 
     function scheduleBackoff() {
@@ -166,7 +244,9 @@
 
     // Abre sesion una vez por partida. ultimoIndice permite reanudar el
     // cursor si el navegador perdio el suyo (por ejemplo, otro dispositivo
-    // ya envio parte de esta misma partida).
+    // ya envio parte de esta misma partida). Un ultimoIndice ausente o
+    // invalido en esta respuesta no es un error: el token sigue sirviendo
+    // para enviar el primer lote desde el cursor local.
     async function ensureSession() {
       if (adapter.getToken()) return true;
       if (!fetchImpl) {
@@ -175,7 +255,7 @@
       }
       setStatus(STATES.CONNECTING);
       const ctx = adapter.getContext();
-      const response = await fetchImpl(sesionUrl, {
+      const response = await fetchWithTimeout(sesionUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -198,10 +278,16 @@
         return false;
       }
       adapter.setToken(payload.token);
-      const advance = tryAdvanceCursor(payload.ultimoIndice);
+      let diverged = false;
+      let reasonKey = null;
+      if (isValidUltimoIndice(payload.ultimoIndice)) {
+        const advance = tryAdvanceCursor(payload.ultimoIndice, payload.evento_id);
+        diverged = advance.diverged;
+        reasonKey = advance.reasonKey;
+      }
       adapter.persist();
-      if (advance.diverged) {
-        setStatus(STATES.ERROR, REASONS.POSIBLE_MULTIPLES_PESTANAS);
+      if (diverged) {
+        setStatus(STATES.ERROR, divergenceReason(reasonKey));
         scheduleBackoff();
         return false;
       }
@@ -211,11 +297,12 @@
     async function sendPendingBatch() {
       const events = adapter.getEvents();
       const cursor = normalizeCursor(adapter.getCursor());
-      const batch = buildBatch(events, cursor, maxBatchSize, maxBatchBytes);
-      if (batch.length === 0) return;
       const ctx = adapter.getContext();
+      const envelopeBytes = estimateBytes({ runId: ctx.runId, eventos: [] });
+      const batch = buildBatch(events, cursor, maxBatchSize, maxBatchBytes, envelopeBytes);
+      if (batch.length === 0) return;
       const token = adapter.getToken();
-      const response = await fetchImpl(eventosUrl, {
+      const response = await fetchWithTimeout(eventosUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Luma-Token': token },
         body: JSON.stringify({ runId: ctx.runId, eventos: batch }),
@@ -240,12 +327,24 @@
         return;
       }
       const payload = await response.json();
+      // Una confirmacion con forma invalida (sin ultimoIndice, o que no es
+      // un entero valido) NUNCA se trata como exito: ni se marca "en linea"
+      // ni se actualiza la marca de ultima confirmacion. Antes de esta
+      // comprobacion, un HTTP 200 con cuerpo `{}` dejaba el cursor quieto
+      // (correcto) pero aparentaba una confirmacion real (incorrecto).
+      if (!payload || !isValidUltimoIndice(payload.ultimoIndice)) {
+        setStatus(STATES.ERROR, REASONS.CONFIRMACION_INVALIDA);
+        scheduleBackoff();
+        return;
+      }
       // El cursor SOLO avanza hasta lo que el servidor confirma, nunca hasta
-      // lo que este cliente cree haber enviado.
-      const advance = tryAdvanceCursor(payload && payload.ultimoIndice);
-      adapter.persist();
+      // lo que este cliente cree haber enviado. Cuando el servidor incluye
+      // el id del evento confirmado, tambien se exige que coincida con el
+      // evento local en esa posicion (ver tryAdvanceCursor).
+      const advance = tryAdvanceCursor(payload.ultimoIndice, payload.evento_id);
+      if (advance.advanced) adapter.persist();
       if (advance.diverged) {
-        setStatus(STATES.ERROR, REASONS.POSIBLE_MULTIPLES_PESTANAS);
+        setStatus(STATES.ERROR, divergenceReason(advance.reasonKey));
         scheduleBackoff();
         return;
       }
@@ -263,7 +362,7 @@
       // esta partida": no se envia nada hasta que los eventos locales
       // vuelvan a alcanzarlo.
       if (normalizeCursor(adapter.getCursor()) > adapter.getEvents().length - 1) {
-        setStatus(STATES.ERROR, REASONS.POSIBLE_MULTIPLES_PESTANAS);
+        setStatus(STATES.ERROR, REASONS.POSIBLE_MULTIPLES_PESTANAS_CONTEO);
         scheduleBackoff();
         return;
       }
@@ -276,9 +375,14 @@
         const ready = await ensureSession();
         if (ready) await sendPendingBatch();
       } catch {
+        // Cubre fallo de red real y el timeout de fetchWithTimeout: ambos
+        // son un fallo de transporte normal, entran en el mismo backoff.
         setStatus(STATES.OFFLINE, REASONS.FALLO_RED);
         scheduleBackoff();
       } finally {
+        // Se libera SIEMPRE, pase lo que pase arriba (exito, fallo o
+        // timeout): sin este finally, una peticion colgada dejaria
+        // `sending` en true para siempre y ningun tick futuro reintentaria.
         sending = false;
       }
     }
@@ -299,13 +403,14 @@
       if (!token) return;
       const events = adapter.getEvents();
       const cursor = normalizeCursor(adapter.getCursor());
-      // Si el cursor ya supera los eventos locales (posible conflicto entre
-      // pestanas, ver REASONS.POSIBLE_MULTIPLES_PESTANAS), buildBatch no
-      // encuentra nada desde cursor + 1 y devuelve un lote vacio: no hace
-      // falta un chequeo aparte aqui, el siguiente `if` ya corta el envio.
-      const batch = buildBatch(events, cursor, maxBatchSize, maxBatchBytes);
-      if (batch.length === 0) return;
       const ctx = adapter.getContext();
+      const envelopeBytes = estimateBytes({ runId: ctx.runId, eventos: [], token });
+      // Si el cursor ya supera los eventos locales (posible conflicto entre
+      // pestanas, ver REASONS.POSIBLE_MULTIPLES_PESTANAS_CONTEO), buildBatch
+      // no encuentra nada desde cursor + 1 y devuelve un lote vacio: no hace
+      // falta un chequeo aparte aqui, el siguiente `if` ya corta el envio.
+      const batch = buildBatch(events, cursor, maxBatchSize, maxBatchBytes, envelopeBytes);
+      if (batch.length === 0) return;
       const body = JSON.stringify({ runId: ctx.runId, eventos: batch, token });
       let sent = false;
       if (sendBeaconImpl) {
@@ -346,7 +451,7 @@
     };
   }
 
-  const api = { create, STATES, REASONS, buildBatch };
+  const api = { create, STATES, REASONS, buildBatch, isValidUltimoIndice };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.LumaTelemetryClient = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

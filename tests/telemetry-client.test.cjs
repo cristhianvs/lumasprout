@@ -262,7 +262,7 @@ test('si el servidor confirma mas eventos de los que existen localmente, no se a
   assert.equal(eventosCalls, 0, 'no se intenta enviar un lote mientras hay divergencia');
   const status = client.getStatus();
   assert.equal(status.state, 'error');
-  assert.equal(status.reason, T.REASONS.POSIBLE_MULTIPLES_PESTANAS);
+  assert.equal(status.reason, T.REASONS.POSIBLE_MULTIPLES_PESTANAS_CONTEO);
 });
 
 test('un cursor guardado que ya supera los eventos locales no envia nada y se reporta error', async () => {
@@ -292,7 +292,7 @@ test('un cursor guardado que ya supera los eventos locales no envia nada y se re
   assert.deepEqual(adapter.getEvents(), [{ id: 'e0' }, { id: 'e1' }], 'no se borra ningun evento');
   const status = client.getStatus();
   assert.equal(status.state, 'error');
-  assert.equal(status.reason, T.REASONS.POSIBLE_MULTIPLES_PESTANAS);
+  assert.equal(status.reason, T.REASONS.POSIBLE_MULTIPLES_PESTANAS_CONTEO);
 });
 
 test('la divergencia se recupera sola cuando los eventos locales vuelven a alcanzar al servidor', async () => {
@@ -336,6 +336,185 @@ test('la divergencia se recupera sola cuando los eventos locales vuelven a alcan
   await flushAsync();
   assert.equal(client.getStatus().state, 'en linea');
   assert.equal(adapter.getCursor(), 5);
+});
+
+test('una peticion colgada agota su tiempo de espera y el siguiente ciclo si reintenta', async () => {
+  // El mock de fetch NUNCA resuelve ni rechaza: simula una peticion
+  // realmente colgada (sin servidor, proxy roto, etc). Sin un limite de
+  // tiempo propio del cliente, `sending` se quedaria en true para siempre.
+  let tick;
+  let sesionCalls = 0;
+  const fetchMock = async (url) => {
+    if (url.endsWith('/api/luma/sesion')) {
+      sesionCalls++;
+      if (sesionCalls === 1) return new Promise(() => {});
+      return { ok: true, status: 200, json: async () => ({ token: 'tok-1', ultimoIndice: -1 }) };
+    }
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ guardados: 1, duplicados: 0, ultimoIndice: 0 }),
+    };
+  };
+  const adapter = makeAdapter();
+  adapter._state.events.push({ id: 'e0' });
+  const client = T.create({
+    config: { enabled: true, baseUrl: '', requestTimeoutMs: 5, minBackoffMs: 1, maxBackoffMs: 2 },
+    adapter,
+    fetch: fetchMock,
+    setInterval: (fn) => {
+      tick = fn;
+      return 1;
+    },
+    clearInterval: () => {},
+  });
+  tick();
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.equal(
+    client.getStatus().state,
+    'sin conexion',
+    'el timeout debe tratarse como fallo normal',
+  );
+  assert.equal(sesionCalls, 1, 'la primera peticion sigue colgada, no se duplica mientras tanto');
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  tick();
+  await flushAsync();
+  assert.equal(sesionCalls, 2, 'el siguiente ciclo SI reintenta: sending se libero en el finally');
+  assert.equal(adapter.getToken(), 'tok-1');
+});
+
+test('si el evento confirmado no coincide con el local en esa posicion, no se avanza el cursor (identidad, no solo cantidad)', async () => {
+  // Dos ramas distintas de la MISMA longitud: comparar solo cantidades no
+  // detecta esto. El servidor dice que el evento en el indice 1 es
+  // 'otra-pestana:1', pero localmente el evento 1 es 'e1'.
+  let tick;
+  const fetchMock = async (url) => {
+    if (url.endsWith('/api/luma/sesion')) {
+      return { ok: true, status: 200, json: async () => ({ token: 'tok-1', ultimoIndice: -1 }) };
+    }
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        guardados: 2,
+        duplicados: 0,
+        ultimoIndice: 1,
+        evento_id: 'otra-pestana:1',
+      }),
+    };
+  };
+  const adapter = makeAdapter();
+  adapter._state.events.push({ id: 'e0' }, { id: 'e1' });
+  const client = T.create({
+    config: { enabled: true, baseUrl: '', minBackoffMs: 1 },
+    adapter,
+    fetch: fetchMock,
+    setInterval: (fn) => {
+      tick = fn;
+      return 1;
+    },
+    clearInterval: () => {},
+  });
+  tick();
+  await flushAsync();
+  assert.equal(adapter.getCursor(), -1, 'no se adopta un cursor cuyo evento no coincide');
+  const status = client.getStatus();
+  assert.equal(status.state, 'error');
+  assert.equal(status.reason, T.REASONS.POSIBLE_MULTIPLES_PESTANAS_IDENTIDAD);
+});
+
+test('si el servidor no manda evento_id (contrato actual), se tolera su ausencia y se usa solo la cantidad', async () => {
+  let tick;
+  const fetchMock = async (url) => {
+    if (url.endsWith('/api/luma/sesion')) {
+      return { ok: true, status: 200, json: async () => ({ token: 'tok-1', ultimoIndice: -1 }) };
+    }
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ guardados: 2, duplicados: 0, ultimoIndice: 1 }),
+    };
+  };
+  const adapter = makeAdapter();
+  adapter._state.events.push({ id: 'e0' }, { id: 'e1' });
+  T.create({
+    config: { enabled: true, baseUrl: '' },
+    adapter,
+    fetch: fetchMock,
+    setInterval: (fn) => {
+      tick = fn;
+      return 1;
+    },
+    clearInterval: () => {},
+  });
+  tick();
+  await flushAsync();
+  assert.equal(
+    adapter.getCursor(),
+    1,
+    'sin evento_id, el comportamiento anterior (solo cantidad) se conserva',
+  );
+});
+
+test('una confirmacion con forma invalida (200 con cuerpo vacio) no aparenta exito', async () => {
+  let tick;
+  const fetchMock = async (url) => {
+    if (url.endsWith('/api/luma/sesion')) {
+      return { ok: true, status: 200, json: async () => ({ token: 'tok-1', ultimoIndice: -1 }) };
+    }
+    return { ok: true, status: 200, json: async () => ({}) };
+  };
+  const adapter = makeAdapter();
+  adapter._state.events.push({ id: 'e0' }, { id: 'e1' });
+  const client = T.create({
+    config: { enabled: true, baseUrl: '', minBackoffMs: 1 },
+    adapter,
+    fetch: fetchMock,
+    now: () => 12345,
+    setInterval: (fn) => {
+      tick = fn;
+      return 1;
+    },
+    clearInterval: () => {},
+  });
+  tick();
+  await flushAsync();
+  const status = client.getStatus();
+  assert.equal(adapter.getCursor(), -1);
+  assert.notEqual(
+    status.state,
+    'en linea',
+    'un cuerpo sin ultimoIndice valido no debe aparentar exito',
+  );
+  assert.equal(status.state, 'error');
+  assert.equal(status.reason, T.REASONS.CONFIRMACION_INVALIDA);
+  assert.equal(status.lastConfirmedAt, null, 'no se debe actualizar la marca de confirmacion');
+});
+
+test('un ultimoIndice que no es un entero valido (texto, negativo fuera de rango) tambien se rechaza', async () => {
+  let tick;
+  const fetchMock = async (url) => {
+    if (url.endsWith('/api/luma/sesion')) {
+      return { ok: true, status: 200, json: async () => ({ token: 'tok-1', ultimoIndice: -1 }) };
+    }
+    return { ok: true, status: 200, json: async () => ({ ultimoIndice: 'uno' }) };
+  };
+  const adapter = makeAdapter();
+  adapter._state.events.push({ id: 'e0' });
+  const client = T.create({
+    config: { enabled: true, baseUrl: '', minBackoffMs: 1 },
+    adapter,
+    fetch: fetchMock,
+    setInterval: (fn) => {
+      tick = fn;
+      return 1;
+    },
+    clearInterval: () => {},
+  });
+  tick();
+  await flushAsync();
+  assert.equal(client.getStatus().state, 'error');
+  assert.equal(client.getStatus().reason, T.REASONS.CONFIRMACION_INVALIDA);
 });
 
 test('un fallo de red no lanza excepciones ni bloquea el bucle del cliente', async () => {
@@ -425,6 +604,79 @@ test('buildBatch respeta el maximo de eventos y el maximo de bytes por lote', ()
   assert(JSON.stringify(byBytes).length <= 60);
   const fromCursor = T.buildBatch(events, 4, 10, 1000000);
   assert.equal(fromCursor[0].id, 'e5');
+});
+
+test('un evento que por si solo supera el limite de bytes se envia solo, no se descarta en silencio', () => {
+  const events = [
+    { id: 'e0', data: 'x'.repeat(1000) },
+    { id: 'e1', data: 'y' },
+  ];
+  const batch = T.buildBatch(events, -1, 200, 10);
+  assert.deepEqual(
+    batch.map((e) => e.id),
+    ['e0'],
+    'el primero se envia aunque exceda el limite, en vez de atascar la cola para siempre',
+  );
+});
+
+test('el limite de lote mide bytes UTF-8 reales, no unidades de caracteres (P2-5)', () => {
+  // Cada 'á' ocupa 2 bytes en UTF-8 pero cuenta como 1 en .length: contar
+  // caracteres subestima el tamano real de la peticion.
+  const acentuado = { id: 'e0', texto: 'á'.repeat(30) };
+  const otro = { id: 'e1', texto: 'é'.repeat(30) };
+  const events = [acentuado, otro];
+  const charLength = JSON.stringify(acentuado).length;
+  const byteLength = new TextEncoder().encode(JSON.stringify(acentuado)).length;
+  assert(byteLength > charLength, 'la prueba solo tiene sentido si los acentos pesan mas en bytes');
+  // Presupuesto que alcanzaria para los dos eventos si se contaran
+  // caracteres, pero no si se cuentan los bytes reales que de verdad viajan.
+  const maxBytes = charLength * 2 + 2;
+  const batch = T.buildBatch(events, -1, 10, maxBytes);
+  assert.equal(
+    batch.length,
+    1,
+    'con bytes reales, el segundo evento no cabe y se deja para el siguiente tick',
+  );
+});
+
+test('el envoltorio de la peticion (runId y estructura) resta del presupuesto de bytes, no solo los eventos', async () => {
+  let tick;
+  let capturedEventos = null;
+  const fetchMock = async (url, opts) => {
+    if (url.endsWith('/api/luma/sesion')) {
+      return { ok: true, status: 200, json: async () => ({ token: 'tok-1', ultimoIndice: -1 }) };
+    }
+    const body = JSON.parse(opts.body);
+    capturedEventos = body.eventos;
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        guardados: body.eventos.length,
+        duplicados: 0,
+        ultimoIndice: body.eventos.length - 1,
+      }),
+    };
+  };
+  const adapter = makeAdapter();
+  adapter._state.context.runId = 'r'.repeat(200);
+  for (let i = 0; i < 5; i++) adapter._state.events.push({ id: `e${i}`, data: 'x'.repeat(20) });
+  T.create({
+    config: { enabled: true, baseUrl: '', maxBatchSize: 200, maxBatchBytes: 260 },
+    adapter,
+    fetch: fetchMock,
+    setInterval: (fn) => {
+      tick = fn;
+      return 1;
+    },
+    clearInterval: () => {},
+  });
+  tick();
+  await flushAsync();
+  assert(
+    capturedEventos.length < 5,
+    'un runId largo debe reducir cuantos eventos caben, porque el envoltorio ya pesa en el presupuesto',
+  );
 });
 
 test('el cliente nunca toca localStorage directamente: solo lee y escribe a traves del adapter', () => {
