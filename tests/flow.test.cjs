@@ -7,7 +7,7 @@ const E = require('../engine.js');
 
 // Contrato mínimo de DOM para probar el flujo sin requerir un navegador instalado.
 // No sustituye revisión visual, accesibilidad real ni pruebas de síntesis de voz.
-function app(saved) {
+function app(saved, telemetry) {
   const nodes = new Map(),
     listeners = {},
     timers = [];
@@ -85,7 +85,14 @@ function app(saved) {
   };
   sandbox.window = sandbox;
   sandbox.URLSearchParams = URLSearchParams;
-  sandbox.location = { search: '' };
+  sandbox.location = telemetry?.location || { search: '', origin: 'https://isla-luma.test' };
+  // Inyectado solo cuando una prueba pasa `telemetry`: por defecto
+  // window.LumaTelemetryClient no existe, igual que en las demas pruebas de
+  // este archivo, y app.js cae a su cliente inerte de reemplazo.
+  if (telemetry) {
+    sandbox.LumaTelemetryClient = telemetry.client;
+    sandbox.LumaTelemetryConfig = { config: telemetry.config || { enabled: false } };
+  }
   const context = vm.createContext(sandbox);
   vm.runInContext(fs.readFileSync(require.resolve('../app.js'), 'utf8'), context);
   const read = () => {
@@ -252,4 +259,77 @@ test('latencia activa persiste al recargar y migra registros antiguos', () => {
     b.submit('1/4');
     assert.equal(b.read().events.findLast((e) => e.type === 'attempt').data.latencyMs, 40000);
   }
+});
+
+// --- P2-6: el panel de Familias debe reflejar el estado real del envio ---
+
+function activeTelemetryClient(status) {
+  return {
+    create: () => ({
+      flushOnHide() {},
+      getStatus: () => ({
+        state: 'en linea',
+        pending: 0,
+        lastConfirmedAt: null,
+        reason: null,
+        ...status,
+      }),
+      stop() {},
+    }),
+  };
+}
+
+test('con la telemetria desactivada (por defecto), Familias sigue diciendo que no se envian datos', () => {
+  const a = app();
+  a.nodes.get('family').onclick();
+  const html = a.nodes.get('modal').html;
+  assert.match(html, /no envía datos a un servidor/);
+  assert.doesNotMatch(html, /ACTIVADO/);
+});
+
+test('con la telemetria activa, Familias dice que el envio esta activado y a que destino', () => {
+  const a = app(null, {
+    client: activeTelemetryClient(),
+    config: { enabled: true, baseUrl: 'https://telemetria.isla-luma.test' },
+  });
+  a.nodes.get('family').onclick();
+  const html = a.nodes.get('modal').html;
+  assert.match(html, /ACTIVADO/);
+  assert.match(html, /telemetria\.isla-luma\.test/);
+  assert.doesNotMatch(html, /no envía datos a un servidor/);
+});
+
+test('con destino de mismo origen (baseUrl vacio), Familias muestra el origen de la propia pagina', () => {
+  const a = app(null, {
+    client: activeTelemetryClient(),
+    config: { enabled: true, baseUrl: '' },
+    location: { search: '', origin: 'https://abejorro.ai' },
+  });
+  a.nodes.get('family').onclick();
+  const html = a.nodes.get('modal').html;
+  assert.match(html, /ACTIVADO/);
+  assert.match(html, /abejorro\.ai/);
+});
+
+test('el texto de Familias se recalcula en cada apertura del panel, no queda fijo desde el arranque', () => {
+  // Un mismo cliente cuyo estado cambia de desactivado a activo entre dos
+  // aperturas: el texto debe cambiar tambien, porque se deriva en vivo de
+  // telemetry.getStatus(), no de una constante fijada al cargar la pagina.
+  let currentState = 'desactivado';
+  const client = {
+    create: () => ({
+      flushOnHide() {},
+      getStatus: () => ({ state: currentState, pending: 0, lastConfirmedAt: null, reason: null }),
+      stop() {},
+    }),
+  };
+  const a = app(null, {
+    client,
+    config: { enabled: true, baseUrl: 'https://telemetria.isla-luma.test' },
+  });
+  a.nodes.get('family').onclick();
+  assert.match(a.nodes.get('modal').html, /no envía datos a un servidor/);
+  currentState = 'en linea';
+  a.nodes.get('family').onclick();
+  assert.match(a.nodes.get('modal').html, /ACTIVADO/);
 });

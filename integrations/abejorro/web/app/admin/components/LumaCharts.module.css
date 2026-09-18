@@ -1,0 +1,243 @@
+.card {
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 2px 6px #0f172a04;
+}
+.title {
+  margin: 0 0 22px;
+  font-size: 15px;
+  font-weight: 650;
+  color: #243349;
+  letter-spacing: -0.015em;
+}
+.rows {
+  display: grid;
+  gap: 18px;
+}
+.rowHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  font-size: 13px;
+  color: #526179;
+  margin-bottom: 7px;
+}
+.value {
+  color: #172b43;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.track {
+  height: 9px;
+  background: #f1f5f9;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.fill {
+  height: 100%;
+  border-radius: 5px;
+}
+.plot {
+  position: relative;
+  height: 180px;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  border-bottom: 1px solid #cbd5e1;
+  background: repeating-linear-gradient(
+    to top,
+    transparent 0,
+    transparent 44px,
+    #e8edf3 44px,
+    #e8edf3 45px
+  );
+}
+.column {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-direction: column;
+  outline: none;
+}
+.bar {
+  width: 100%;
+  max-width: 28px;
+  border-radius: 4px 4px 0 0;
+  background: #0d9488;
+  flex-shrink: 0;
+}
+.gap {
+  width: 8px;
+  height: 8px;
+  border: 1px dashed #94a3b8;
+  border-radius: 50%;
+  margin-bottom: 2px;
+}
+.zero {
+  width: 12px;
+  height: 2px;
+  background: #64748b;
+}
+.tooltip {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  z-index: 5;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 220px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: #172b43;
+  color: white;
+  font-size: 12px;
+  line-height: 1.5;
+  pointer-events: none;
+  box-shadow: 0 4px 12px #172b4320;
+}
+.column:hover .tooltip,
+.column:focus .tooltip {
+  display: block;
+}
+.column:first-child .tooltip {
+  left: 0;
+  transform: none;
+}
+.column:last-child .tooltip {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+.column:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+.axis {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 10px;
+  font-size: 11px;
+  color: #64748b;
+}
+.axis span {
+  max-width: 25%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scale {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  color: #64748b;
+  font-size: 11px;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: #526179;
+}
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  display: inline-block;
+}
+.note {
+  margin: 12px 0 0;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.details {
+  margin-top: 16px;
+  font-size: 12px;
+  color: #526179;
+}
+.details summary {
+  cursor: pointer;
+  padding: 4px 0;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+.table th,
+.table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  overflow-wrap: anywhere;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.metric {
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  border-top: 3px solid #cbd5e1;
+}
+.metric:nth-child(1) {
+  border-top-color: #2563eb;
+}
+.metric:nth-child(2) {
+  border-top-color: #0d9488;
+}
+.metric:nth-child(3) {
+  border-top-color: #7c3aed;
+}
+.metricLabel {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
+}
+.metricValue {
+  margin-top: 10px;
+  font-size: 27px;
+  font-weight: 650;
+  color: #172b43;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 640px) {
+  .card {
+    padding: 18px;
+  }
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .metric {
+    padding: 16px;
+  }
+  .metricValue {
+    font-size: 23px;
+  }
+  .plot {
+    gap: 2px;
+  }
+}

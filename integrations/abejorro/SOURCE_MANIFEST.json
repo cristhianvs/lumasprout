@@ -1,0 +1,378 @@
+[
+  {
+    "source": "apps/web/app/admin/components/LumaAntiguedadBadge.tsx",
+    "file": "web/app/admin/components/LumaAntiguedadBadge.tsx",
+    "sourceSha256": "2dc4f8494d7b76893d34e2a9ed9f18301e1f7758d7a63203240f9f3322d88582",
+    "sha256": "07c10a5095626e5c9afa36d15bda4a8f35ae2af8e41b433e19a240427fdd1978"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaBarChartConHuecos.tsx",
+    "file": "web/app/admin/components/LumaBarChartConHuecos.tsx",
+    "sourceSha256": "99e6c96017c0788350e5e657257d159c2e12e11c3365dab563d7bb1cfac36908",
+    "sha256": "78ca5c8ed0fb9a7119ca76ce70cc2c863d691667f719af6ff58165581f7749b4"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaBarraApiladaChart.tsx",
+    "file": "web/app/admin/components/LumaBarraApiladaChart.tsx",
+    "sourceSha256": "f928a44302c8b42b397e5d5c1fbd55472beba9fb628ee2a6edfe9112a99086db",
+    "sha256": "5f5b610bdb04c17820c261dc89aba547f6ce6c77e424842943323bdf0b80f60e"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaCategoryChart.tsx",
+    "file": "web/app/admin/components/LumaCategoryChart.tsx",
+    "sourceSha256": "957aa403248e40d158266d55678da3c7016f57c2e60e7a3f85d6b87cae412bc3",
+    "sha256": "d12c2da7608f05f76c77ff59326db161b600741c4e2ffeb3ad6be011fafe51b1"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaChartFrame.tsx",
+    "file": "web/app/admin/components/LumaChartFrame.tsx",
+    "sourceSha256": "e8e8409e3c1a8731b0b863ed341a3eca2a2f5f0b641a0878f6b0946156ff55ce",
+    "sha256": "30fd40d597e572eea3b5af05b0f6d69f2515e456bb02d23c947530711537120d"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaCharts.module.css",
+    "file": "web/app/admin/components/LumaCharts.module.css",
+    "sourceSha256": "574bdfaa675f2f8b49c15e850cf3cae43dc37c5abcdbfb04e438719c20f0d880",
+    "sha256": "574bdfaa675f2f8b49c15e850cf3cae43dc37c5abcdbfb04e438719c20f0d880"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaCircuitoAdaptacion.tsx",
+    "file": "web/app/admin/components/LumaCircuitoAdaptacion.tsx",
+    "sourceSha256": "bc2ecf3fb7130f3d28b0268822fe9f4352fc4cacb552487b1a9216ce973bc03e",
+    "sha256": "20718c019998a607bd481563dda642fa49162bf8e246967016d08ae05fcc34e9"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaConnectionError.tsx",
+    "file": "web/app/admin/components/LumaConnectionError.tsx",
+    "sourceSha256": "a89de4beb5278046428f39e7f156c5e95badff34429f41eb9b5337ca9cddb598",
+    "sha256": "dda2053ba2ce05f87f3c3dfb5e5b6dd688d3140311dd968b4d4558ce19b7c152"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaDecisionAdaptacionFila.tsx",
+    "file": "web/app/admin/components/LumaDecisionAdaptacionFila.tsx",
+    "sourceSha256": "cab8a7b866b18795f2a596e702be19c806bfa79ac4649fd807775f0ac24a096e",
+    "sha256": "89a76d4fbf71522b4776e54d497526bd4b2a07477adc44aa9ad3f0ac17833d6c"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaDiagnosticoAdaptacionTablas.tsx",
+    "file": "web/app/admin/components/LumaDiagnosticoAdaptacionTablas.tsx",
+    "sourceSha256": "6d59c2ee50afb7a1316e7ed4bae00373a689304968e4f62eac0949daf3585a71",
+    "sha256": "7a5f0685df226396f1aac1867173f3bba4c7ca9aede81f2705dd1e8190b5d9cc"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaDiagnosticoAndamiaje.tsx",
+    "file": "web/app/admin/components/LumaDiagnosticoAndamiaje.tsx",
+    "sourceSha256": "614678bc886e77f05dba93bf19a7b79968727ee3219257a657423a13fbabfc52",
+    "sha256": "fb0a0201708814e447a01061dfe4fe5dc82d3a737dafad1cbab1a58009918b01"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaDiagnosticoErroresFormato.tsx",
+    "file": "web/app/admin/components/LumaDiagnosticoErroresFormato.tsx",
+    "sourceSha256": "03249bd6c4d6e7398ef253e5ed07bfe7ae1f862a7c74e0ac1510d6963bede52e",
+    "sha256": "3e9a66cc8f32b900267e68a36e3b07fa778d629a62ed30e246f91ca38e4cc8ba"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaDiagnosticoPuntosFuga.tsx",
+    "file": "web/app/admin/components/LumaDiagnosticoPuntosFuga.tsx",
+    "sourceSha256": "1fbb157cd8813091148dba268f6f5dc3703c696af92b5ef1fe6b762b97101781",
+    "sha256": "df726902e7957985c308680bd2d0cbdf1c90247ac57dc6ae4a79fdeb0328a99a"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaDiagnosticoTablaItems.tsx",
+    "file": "web/app/admin/components/LumaDiagnosticoTablaItems.tsx",
+    "sourceSha256": "cf6e45dbe8f7d320cf80c5b290236a516a393d7bc7124910c4afcb7065bb5f72",
+    "sha256": "fce5d577c9683c8888a20ff12ab5c33c7ac361f98dc2794e61ce599dcf10f8c1"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaDiagramaFases.tsx",
+    "file": "web/app/admin/components/LumaDiagramaFases.tsx",
+    "sourceSha256": "96f5a74f8a022c6a40c1bcd82f29d51b2fc7e66374df435e9bd8505895798bc4",
+    "sha256": "34fe4ad203a86fc11041262c658ffc49bc2ab1412ba865cbdc95e5bc32f585c2"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaEventosRecientes.tsx",
+    "file": "web/app/admin/components/LumaEventosRecientes.tsx",
+    "sourceSha256": "86cc5bf8e68d0f9506fe80f9081b617ab9a05ec0b9d9cd249562aa33603f91db",
+    "sha256": "c5bcc48469496a9e0fe4f1f29296ed47db79f5fdd55473cc22fd97d38f18fcc0"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaHistoricoBayesiano.tsx",
+    "file": "web/app/admin/components/LumaHistoricoBayesiano.tsx",
+    "sourceSha256": "fbeb022af61a0d06baceedee2774c159a5c1914aa8e1499645754210d7dacd2d",
+    "sha256": "ae5184b7cfd60ffdcb3ce8cc2ec6238dfde168f1813085b31f345baf059db5c3"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaHistoricoProgresion.tsx",
+    "file": "web/app/admin/components/LumaHistoricoProgresion.tsx",
+    "sourceSha256": "e09872849bd12f68cbac4c00f41fe7d71c7245bfdcf666c46da5da3eb567d549",
+    "sha256": "0c18f37f3e5227f6250604b6ebc39bce56844557b9138464f7060d471d7013c9"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaHistoricoSesiones.tsx",
+    "file": "web/app/admin/components/LumaHistoricoSesiones.tsx",
+    "sourceSha256": "f6afd8404a3328594fb558166662367c682ef31cda1bdfc198ebf430cbcea0d3",
+    "sha256": "3cc5f222c9e69dcd20a2c09b791ebced233e2dec642964a47589e0f19be8ae3c"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaIndicadorAutonomia.tsx",
+    "file": "web/app/admin/components/LumaIndicadorAutonomia.tsx",
+    "sourceSha256": "4e6e97292a32c5f19e5d8faa80a84ad95a8f37dc6ce63a4c779f906f438e39f0",
+    "sha256": "c9916dc3bcc1394231aaf2d51e95b3023c98400fa826f1f57f827f742728f08b"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaIndicadorAyuda.tsx",
+    "file": "web/app/admin/components/LumaIndicadorAyuda.tsx",
+    "sourceSha256": "8be0ff75fbebcc1aebeda9dc4d1f62f51b8b5652d0c6e18433f1188ca4d58789",
+    "sha256": "e0600c6e74a4bc335e6fdb0b8211064e9f251784163a643c647319d3e468d0ee"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaIndicadores.tsx",
+    "file": "web/app/admin/components/LumaIndicadores.tsx",
+    "sourceSha256": "60bf2d1666508ba69d712cd782883133a09d5d33208df10eacd68f9d88f4cf61",
+    "sha256": "4c1dfe227d99233cdec30adbf90fa975a86582539d51a56d948929b04f22e483"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaIndicadorIndependencia.tsx",
+    "file": "web/app/admin/components/LumaIndicadorIndependencia.tsx",
+    "sourceSha256": "9c4c7c54097a155b3f98d8c822e626ddd6ff9df52aebdf3a3da6bddcd346af7a",
+    "sha256": "5eb6f0afcbfcdd998cdfb6431a4df422cdb227b1fb980fe143829880ddb09667"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaIndicadorRespuestaError.tsx",
+    "file": "web/app/admin/components/LumaIndicadorRespuestaError.tsx",
+    "sourceSha256": "8c118d531132c9bc31ecde805bafeb98a0266820809fc099280e0a026092fe67",
+    "sha256": "5433fcca369d5f898828e7f96c6284bb5bd41f57e30b534cb18215ef3acba1fd"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaIndicadorRitmo.tsx",
+    "file": "web/app/admin/components/LumaIndicadorRitmo.tsx",
+    "sourceSha256": "8a1778222c5102fd9e682938540d6fed41fd49bf991406a5299ae1b508b47cd6",
+    "sha256": "f1204ead6739d7d8bdcbb55cb03d7b426dd97c69afcb725c6823a063654f0fab"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaPanel.tsx",
+    "file": "web/app/admin/components/LumaPanel.tsx",
+    "sourceSha256": "8f0ed3b24f37f0e51b624d99ffd48435a995a65dedfaff075b97eeaa4c83e695",
+    "sha256": "d9b64658a8688df71af87337ad1214b63163f581bd4c8fc66de2504f5cf0fd79"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaPanoramaActividad.tsx",
+    "file": "web/app/admin/components/LumaPanoramaActividad.tsx",
+    "sourceSha256": "d4a04b6ded9035b622f8d62d42d2f8a835071914892b8121d07823fae8459f78",
+    "sha256": "e68b5a7c4c537970df5632fea462c09b706f7cbd5d84706902dd1e0cae58a26b"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaPanoramaEmbudo.tsx",
+    "file": "web/app/admin/components/LumaPanoramaEmbudo.tsx",
+    "sourceSha256": "db32e1a2aafef745e647fe6ec472bdec2ea7627d1ddfa455ee27d8b430284a74",
+    "sha256": "9388acec38cae1cd9a48f470a0683c34cf135b4357c0948fef759b5d877f3d76"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaPanoramaModalidades.tsx",
+    "file": "web/app/admin/components/LumaPanoramaModalidades.tsx",
+    "sourceSha256": "9f4edac2ccb42b327562970a9f57653618d1f4726c9a7bb613c232a720c69100",
+    "sha256": "159f8b87acc1017820c93aa0436db406e29194541b116b4404b9b12ae8dd4483"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaPanoramaMotivosCierre.tsx",
+    "file": "web/app/admin/components/LumaPanoramaMotivosCierre.tsx",
+    "sourceSha256": "a8ac7db9502e6cbd5f143e69ac337ab7d083d59f42dcdca71b316e8d01dd6ee5",
+    "sha256": "14b22f9f64987c054f414ecac68d071dbbf0109c643c10e8dfe2ea8a8ab5e340"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaPanoramaResumenCards.tsx",
+    "file": "web/app/admin/components/LumaPanoramaResumenCards.tsx",
+    "sourceSha256": "fc1b0987d0bbeebd710f49d2ef932f905073d99604f77843b5f8d8e373dd1593",
+    "sha256": "81112ba336a136f5954050a905adebf5ae9a7f401b504f1d68e883dd400b7e45"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaRejillaHabilidades.tsx",
+    "file": "web/app/admin/components/LumaRejillaHabilidades.tsx",
+    "sourceSha256": "64ecb01f1dacdc7e8e8f312a418eabc4d371a5c5d87a58e6e2a57690f2c3c491",
+    "sha256": "0e661fe3175d26d22e21d76f9a6a07da0da3c6dca39ac7a228522328fb6e2d62"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaSeriesAyuda.tsx",
+    "file": "web/app/admin/components/LumaSeriesAyuda.tsx",
+    "sourceSha256": "9a89e66c119cbec4bb3a4577c794b217176d132a52addddd5d2b28ced6958060",
+    "sha256": "0a09aa0011a14a16fee342ac6de9915c43d48c2d57bee8367bf92f539ac670de"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaSeriesCasillasAcumuladas.tsx",
+    "file": "web/app/admin/components/LumaSeriesCasillasAcumuladas.tsx",
+    "sourceSha256": "7107ff9e46c50b6b875b02994cf6f99f1ff32d7b16c2662867aefd205085f48c",
+    "sha256": "7d034db00620c34c7602c37b36132bdd8af1521e95b1000f2747cd5c2eab31da"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaSeriesIndependencia.tsx",
+    "file": "web/app/admin/components/LumaSeriesIndependencia.tsx",
+    "sourceSha256": "7c8916768071ccdc0fdf8a3f7cbd85100b464d5f370e17db859a820b9d6c5438",
+    "sha256": "30e7ae1f64da1034b40425e043d08bc2eb11f2b627d0e13b04dd6d674abc37b3"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaSeriesRespuestaError.tsx",
+    "file": "web/app/admin/components/LumaSeriesRespuestaError.tsx",
+    "sourceSha256": "a7499a4c964a5fb6ad2ec29e2b4fe6e1f4fcd2f790d30234975e3e00419b98ce",
+    "sha256": "fed0db7db0f93fb5885a4cb050b738795e6554e9085b6de2fdaf879cf2e82ca9"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaSesionDetalle.tsx",
+    "file": "web/app/admin/components/LumaSesionDetalle.tsx",
+    "sourceSha256": "ca71fb1f6ccbbb7478b6faaee03e892c17f881f0a549fde156a7b8f36c1c0e38",
+    "sha256": "94a6437e5eb915e867681f41c8a18ba06bb13858150b479c65595a8d87b900a2"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaSesionesTabla.tsx",
+    "file": "web/app/admin/components/LumaSesionesTabla.tsx",
+    "sourceSha256": "11ac706f0483d6974d6a3109536e5fa7addba22269548e467d19c41a6ec0589b",
+    "sha256": "0a27a03dc6e3c7573e103d34fd42e6e42727cc6b3140caa9580b19e5eaa2425e"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaSubTabs.tsx",
+    "file": "web/app/admin/components/LumaSubTabs.tsx",
+    "sourceSha256": "813affa3e6343712164b269f1a0bc7366af52578951b78f93d460e50be5c7de7",
+    "sha256": "6533156610e6415664a799318efb0fa7e9fced245923cbcf3989ff0636dafaf0"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaVistaDiagnosticoJuego.tsx",
+    "file": "web/app/admin/components/LumaVistaDiagnosticoJuego.tsx",
+    "sourceSha256": "531bcf0645ead8c138a05d966f609e8cc3b7d56bed3744954f1139d6b92960d5",
+    "sha256": "0b7a7a22e3e87badcf428b8616c2ee7f31347402104cde7c95f3b495a4a7a14a"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaVistaPanorama.tsx",
+    "file": "web/app/admin/components/LumaVistaPanorama.tsx",
+    "sourceSha256": "5dbb0edb00379dc4c504a977b4d574b9e52e682b773a3b9d0de9681a9d0ef57c",
+    "sha256": "4ce86e05eff494ed10918660ea943a6998829e046af302ee3316ba05c6159fa8"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaVistaParticipante.tsx",
+    "file": "web/app/admin/components/LumaVistaParticipante.tsx",
+    "sourceSha256": "21ca7d6f8203dba6bdb06b5e09b6f5a273111248819a6122ad6f77db635a19cd",
+    "sha256": "815baf054cf35c856b7bd9dfa7846647b52a3250cc854114d58412d088ce2df5"
+  },
+  {
+    "source": "apps/web/app/admin/components/LumaVistaSesiones.tsx",
+    "file": "web/app/admin/components/LumaVistaSesiones.tsx",
+    "sourceSha256": "48bbd6b5bcbffefa2cb213e3f1c5216fe10039dc32eb497a86f71ef045280d84",
+    "sha256": "865986d69e68a17ee97f253afe2d633e2d8ea983ffa7ed7fd4464fa1b2f5d675"
+  },
+  {
+    "source": "apps/web/lib/lumaConstantes.ts",
+    "file": "web/lib/lumaConstantes.ts",
+    "sourceSha256": "b6bfeb7997729e64798db262ceb4a7797d3357f69db622b899579a9d5fa6bf7d",
+    "sha256": "b6bfeb7997729e64798db262ceb4a7797d3357f69db622b899579a9d5fa6bf7d"
+  },
+  {
+    "source": "apps/web/lib/lumaFormat.ts",
+    "file": "web/lib/lumaFormat.ts",
+    "sourceSha256": "eb677f794eabacb1b56a0f4a5b126dc8778d7e417549e6df6fc6f03247d9177a",
+    "sha256": "eb677f794eabacb1b56a0f4a5b126dc8778d7e417549e6df6fc6f03247d9177a"
+  },
+  {
+    "source": "apps/web/hooks/useLumaSesionEnVivo.ts",
+    "file": "web/hooks/useLumaSesionEnVivo.ts",
+    "sourceSha256": "77c2bb2d26d9fab0f2b21621a75c0f67b55036041f7f3d9cdef2c78a7295be2a",
+    "sha256": "2ad75e9d4203d4ab98766532451650a0541453fdb98bd668e788b1e86ab9d306"
+  },
+  {
+    "source": "apps/api/models/luma.py",
+    "file": "api/models/luma.py",
+    "sourceSha256": "eb4e410d7d952c458c8f3816902b1959eeb05af19b74da3f7b42db9c92c6d564",
+    "sha256": "eb4e410d7d952c458c8f3816902b1959eeb05af19b74da3f7b42db9c92c6d564"
+  },
+  {
+    "source": "apps/api/routers/admin_luma.py",
+    "file": "api/routers/admin_luma.py",
+    "sourceSha256": "ff71225dc96c0e1cd89132c27fe9531e0b605da28934a80f19af94aa2e085b8f",
+    "sha256": "ff71225dc96c0e1cd89132c27fe9531e0b605da28934a80f19af94aa2e085b8f"
+  },
+  {
+    "source": "apps/api/routers/luma.py",
+    "file": "api/routers/luma.py",
+    "sourceSha256": "3219418f6bd20fd3c6ac5e8ecd677c2681b709dafee33c164e348bb1515106eb",
+    "sha256": "3219418f6bd20fd3c6ac5e8ecd677c2681b709dafee33c164e348bb1515106eb"
+  },
+  {
+    "source": "apps/api/schemas/luma.py",
+    "file": "api/schemas/luma.py",
+    "sourceSha256": "394407277fafd07eb73684252d02f3e6fec434bbc3bcf2afbeb206291973ad42",
+    "sha256": "394407277fafd07eb73684252d02f3e6fec434bbc3bcf2afbeb206291973ad42"
+  },
+  {
+    "source": "apps/api/schemas/luma_dashboard.py",
+    "file": "api/schemas/luma_dashboard.py",
+    "sourceSha256": "1ed8ee037e8a41619f64f932d83ecf01e35706675696e91dd32a4b0df816c0d7",
+    "sha256": "1ed8ee037e8a41619f64f932d83ecf01e35706675696e91dd32a4b0df816c0d7"
+  },
+  {
+    "source": "apps/api/schemas/luma_items.py",
+    "file": "api/schemas/luma_items.py",
+    "sourceSha256": "ed7ef2edc079d361bd843112cce72301c2c370cc3a59df7c18208264fa22f421",
+    "sha256": "ed7ef2edc079d361bd843112cce72301c2c370cc3a59df7c18208264fa22f421"
+  },
+  {
+    "source": "apps/api/services/luma_dashboard.py",
+    "file": "api/services/luma_dashboard.py",
+    "sourceSha256": "f3dffb43b14479a8045049e8febf59d5145d2d9cac8f6e264007b47f51713cc6",
+    "sha256": "f3dffb43b14479a8045049e8febf59d5145d2d9cac8f6e264007b47f51713cc6"
+  },
+  {
+    "source": "apps/api/services/luma_items.py",
+    "file": "api/services/luma_items.py",
+    "sourceSha256": "48d7d2343c8b8c06dd9273d31533aa73e8891ecd13b4032f80f61c3b7415fe51",
+    "sha256": "48d7d2343c8b8c06dd9273d31533aa73e8891ecd13b4032f80f61c3b7415fe51"
+  },
+  {
+    "source": "apps/api/services/luma_service.py",
+    "file": "api/services/luma_service.py",
+    "sourceSha256": "546615b1e602e1d334c2c724e7b664e5b2ce4206a2a9d5f6df8b2dc83bb1995a",
+    "sha256": "546615b1e602e1d334c2c724e7b664e5b2ce4206a2a9d5f6df8b2dc83bb1995a"
+  },
+  {
+    "source": "apps/api/tests/test_admin_luma_router.py",
+    "file": "api/tests/test_admin_luma_router.py",
+    "sourceSha256": "8a3694861a2643a52d8e2a3310510e34dd19f97cd484cde7894229383e636293",
+    "sha256": "8a3694861a2643a52d8e2a3310510e34dd19f97cd484cde7894229383e636293"
+  },
+  {
+    "source": "apps/api/tests/test_luma_dashboard.py",
+    "file": "api/tests/test_luma_dashboard.py",
+    "sourceSha256": "b9568d4db5d0a0686252c53303cb0001fc0fdc5bf83d5ef2db5787c69b388b8f",
+    "sha256": "b9568d4db5d0a0686252c53303cb0001fc0fdc5bf83d5ef2db5787c69b388b8f"
+  },
+  {
+    "source": "apps/api/tests/test_luma_items.py",
+    "file": "api/tests/test_luma_items.py",
+    "sourceSha256": "3f9932ee97f784571e1b4d3720b5bfcb6b050cf3d58573cda3c1046a00f20ed2",
+    "sha256": "3f9932ee97f784571e1b4d3720b5bfcb6b050cf3d58573cda3c1046a00f20ed2"
+  },
+  {
+    "source": "apps/api/tests/test_luma_router.py",
+    "file": "api/tests/test_luma_router.py",
+    "sourceSha256": "8bbdb97942e01a774d0a1b19b4564d1973be761b91ddf5fa3aa090ba830adca0",
+    "sha256": "8bbdb97942e01a774d0a1b19b4564d1973be761b91ddf5fa3aa090ba830adca0"
+  },
+  {
+    "source": "apps/api/tests/test_luma_service.py",
+    "file": "api/tests/test_luma_service.py",
+    "sourceSha256": "b893c1502167acc520c8fe603c5a519f14e150dec28cfd9d71348aa6787e545e",
+    "sha256": "b893c1502167acc520c8fe603c5a519f14e150dec28cfd9d71348aa6787e545e"
+  },
+  {
+    "source": "apps/api/alembic/versions/004_add_luma_telemetria.py",
+    "file": "api/alembic/versions/004_add_luma_telemetria.py",
+    "sourceSha256": "31211f155369369a342c9ac480f9a650b5c50e08c3bb88080c1c7c63f9b1cc5d",
+    "sha256": "31211f155369369a342c9ac480f9a650b5c50e08c3bb88080c1c7c63f9b1cc5d"
+  },
+  {
+    "component": "web",
+    "sourceCommit": "7b5d4410283209c84a447240c2f33533d0ff49aa",
+    "includesWorkingTreeChanges": true
+  },
+  {
+    "component": "api",
+    "sourceCommit": "0b36e50dbee4755a920c3f2e93bdfadbd282dee2",
+    "includesWorkingTreeChanges": true
+  }
+]
