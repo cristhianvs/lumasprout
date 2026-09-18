@@ -204,6 +204,30 @@ const telemetry = window.LumaTelemetryClient
       flushOnHide() {},
       getStatus: () => ({ state: 'desactivado', pending: 0, lastConfirmedAt: null }),
     };
+// A donde viajarian los eventos si el envio esta activo: el origen efectivo
+// (mismo sitio por defecto, o el destino configurado). Nunca se esconde.
+function telemetryDestinationLabel() {
+  const cfg = (window.LumaTelemetryConfig && window.LumaTelemetryConfig.config) || {};
+  if (cfg.baseUrl) return cfg.baseUrl;
+  try {
+    return location.origin;
+  } catch {
+    return 'este mismo sitio';
+  }
+}
+// Este texto lo lee el adulto responsable, junto al formulario de
+// observaciones: es la informacion con la que decide si confia el prototipo
+// a su hijo o hija. Por eso se calcula del ESTADO REAL del cliente de
+// telemetria en el momento de mostrarlo, nunca de una frase fija que alguien
+// podria olvidar actualizar si el envio se activa.
+function telemetryDisclosure() {
+  const st = telemetry.getStatus();
+  if (st.state === 'desactivado') {
+    return 'Este prototipo guarda en este navegador las elecciones de ayuda, intentos, tiempos activos y avances. No solicita nombre, cámara ni micrófono y no envía datos a un servidor.';
+  }
+  const destino = esc(telemetryDestinationLabel());
+  return `Este prototipo guarda en este navegador las elecciones de ayuda, intentos, tiempos activos y avances. El envío de telemetría a quien investiga este prototipo está ACTIVADO: los eventos de esta partida (tiempos, aciertos, ayudas usadas y navegación entre pantallas, sin nombre, cámara ni micrófono) se envían a ${destino}.`;
+}
 function announce(text) {
   $('#live').textContent = text;
 }
@@ -1153,7 +1177,7 @@ function family() {
   log('family_opened');
   const profile = E.inferProfile(state.events, state.parent?.scores);
   $('#modal').innerHTML =
-    `<h2>Un vistazo a su aventura</h2><p>Este prototipo guarda en este navegador las elecciones de ayuda, intentos, tiempos activos y avances. No solicita nombre, cámara ni micrófono y no envía datos a un servidor.</p><p class="tiny">Un perfil por navegador. Las preferencias son provisionales y no son diagnósticos. ${storageError ? 'No se pudo guardar: exporta los datos antes de cerrar.' : 'El progreso se guarda en este equipo.'}</p><details><summary>Observaciones de la familia</summary><p class="tiny">Se completa una vez, por un adulto. Es un instrumento de prototipo pendiente de validación. El niño puede jugar sin esperar estas respuestas.</p><form id="parent-form"><label>¿Qué instrucciones suele elegir?<select name="channel"><option value="">Aún no lo sé</option><option value="visual">Dibujos o demostraciones visuales</option><option value="auditivo">Explicaciones habladas</option><option value="explorador">Probar con objetos</option><option value="estructurado">Pasos ordenados</option></select></label><label>¿Qué actividad busca por iniciativa propia?<select name="interest"><option value="">Aún no lo sé</option><option value="estructurado">Construcción con instrucciones o acertijos</option><option value="visual">Dibujo y creación libre</option><option value="auditivo">Música y juegos sonoros</option><option value="explorador">Aventuras, movimiento o deportes</option></select></label><label>Cuando algo se complica, suele…<select name="response"><option value="">Aún no lo sé</option><option value="retry">Volver a intentar</option><option value="help">Pedir ayuda</option><option value="pause">Parar o alejarse de la actividad</option><option value="varies">Depende del momento</option></select></label><button type="submit">Guardar observaciones</button><p id="parent-status" role="status"></p></form></details><details><summary>Registro y adaptación</summary><p class="tiny">${state.events.length} eventos · ${Math.floor(state.playMs / 1000)} segundos activos de juego previo. Sin observación familiar completa, no se aplica la ponderación 60/40.</p><pre>${esc(JSON.stringify({ profile, activeExperience: state.current?.experience || state.lastExperience, childChoice: state.experienceChoice || null, rewards: state.rewards || {}, policy: adaptationPolicy(), knowledge: state.knowledge }, null, 2))}</pre><button id="export">Exportar registro completo (JSON)</button></details><div class="actions"><button class="primary" id="close-family">Volver a la isla</button></div>`;
+    `<h2>Un vistazo a su aventura</h2><p>${telemetryDisclosure()}</p><p class="tiny">Un perfil por navegador. Las preferencias son provisionales y no son diagnósticos. ${storageError ? 'No se pudo guardar: exporta los datos antes de cerrar.' : 'El progreso se guarda en este equipo.'}</p><details><summary>Observaciones de la familia</summary><p class="tiny">Se completa una vez, por un adulto. Es un instrumento de prototipo pendiente de validación. El niño puede jugar sin esperar estas respuestas.</p><form id="parent-form"><label>¿Qué instrucciones suele elegir?<select name="channel"><option value="">Aún no lo sé</option><option value="visual">Dibujos o demostraciones visuales</option><option value="auditivo">Explicaciones habladas</option><option value="explorador">Probar con objetos</option><option value="estructurado">Pasos ordenados</option></select></label><label>¿Qué actividad busca por iniciativa propia?<select name="interest"><option value="">Aún no lo sé</option><option value="estructurado">Construcción con instrucciones o acertijos</option><option value="visual">Dibujo y creación libre</option><option value="auditivo">Música y juegos sonoros</option><option value="explorador">Aventuras, movimiento o deportes</option></select></label><label>Cuando algo se complica, suele…<select name="response"><option value="">Aún no lo sé</option><option value="retry">Volver a intentar</option><option value="help">Pedir ayuda</option><option value="pause">Parar o alejarse de la actividad</option><option value="varies">Depende del momento</option></select></label><button type="submit">Guardar observaciones</button><p id="parent-status" role="status"></p></form></details><details><summary>Registro y adaptación</summary><p class="tiny">${state.events.length} eventos · ${Math.floor(state.playMs / 1000)} segundos activos de juego previo. Sin observación familiar completa, no se aplica la ponderación 60/40.</p><pre>${esc(JSON.stringify({ profile, activeExperience: state.current?.experience || state.lastExperience, childChoice: state.experienceChoice || null, rewards: state.rewards || {}, policy: adaptationPolicy(), knowledge: state.knowledge }, null, 2))}</pre><button id="export">Exportar registro completo (JSON)</button></details><div class="actions"><button class="primary" id="close-family">Volver a la isla</button></div>`;
   $('#modal').showModal();
   if (state.parent) {
     for (const key of ['channel', 'interest', 'response'])
