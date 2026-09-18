@@ -19,6 +19,23 @@
   const HTTP_UNAUTHORIZED = 401;
   const HTTP_FORBIDDEN = 403;
   const BACKOFF_JITTER_RATIO = 0.2;
+  // Motivos expuestos en getStatus().reason cuando state es 'error'. No son
+  // texto para el jugador: son para quien lea el estado de conexion.
+  const REASONS = Object.freeze({
+    SIN_FETCH: 'no hay una implementacion de fetch disponible',
+    SESION_INVALIDA: 'la respuesta del servidor al abrir sesion no trae un token valido',
+    TOKEN_RECHAZADO: 'el servidor rechazo el token de esta partida',
+    FALLO_RED: 'fallo de red al intentar enviar telemetria',
+    // Limitacion conocida: runtime.js guarda el estado COMPLETO en cada save,
+    // asi que dos pestanas sobre la misma partida se pisan entre si. Si el
+    // servidor confirma (o el estado cargado ya trae) mas eventos de los que
+    // existen localmente, es la senal de ese conflicto. No se intenta
+    // resolver: no se reenvia ni se borra nada, solo se deja de enviar hasta
+    // que el arreglo local vuelva a alcanzar (o supere) lo que el servidor
+    // ya tiene, momento en el que el envio se reanuda solo.
+    POSIBLE_MULTIPLES_PESTANAS:
+      'el servidor (o el estado guardado) confirma mas eventos de los que existen localmente; posible partida abierta en otra pestana',
+  });
 
   function normalizeCursor(value) {
     return Number.isInteger(value) ? value : -1;
@@ -49,11 +66,11 @@
     return batch;
   }
 
-  function createNullClient() {
+  function createNullClient(reason = null) {
     return {
       flushOnHide() {},
       getStatus() {
-        return { state: STATES.DISABLED, pending: 0, lastConfirmedAt: null };
+        return { state: STATES.DISABLED, pending: 0, lastConfirmedAt: null, reason };
       },
       stop() {},
     };
@@ -66,6 +83,17 @@
     const adapter = options.adapter;
     if (!adapter || typeof adapter.getEvents !== 'function') {
       throw new Error('LumaTelemetryClient.create requiere un adapter valido');
+    }
+    // El laboratorio de simulacion genera eventos con ids DETERMINISTAS
+    // (mismo runId + mismo indice en cada corrida del mismo escenario, ver
+    // simulation.js). Enviarlos envenenaria la deduplicacion del servidor y
+    // mezclaria datos sinteticos con los de una partida real. El transporte
+    // se corta al arrancar: nunca abre sesion ni envia nada en modo
+    // simulacion, sin importar la configuracion.
+    if (adapter.getContext().simulation) {
+      return createNullClient(
+        'modo simulacion: los eventos son deterministas y no se envian nunca',
+      );
     }
     const fetchImpl = options.fetch || (typeof fetch !== 'undefined' ? fetch : null);
     const sendBeaconImpl =
@@ -90,21 +118,39 @@
     const maxBackoffMs = config.maxBackoffMs || 60000;
 
     let status = STATES.CONNECTING;
+    let statusReason = null;
     let lastConfirmedAt = null;
     let sending = false;
     let backoffMs = minBackoffMs;
     let nextAttemptAt = 0;
 
-    function setStatus(next) {
-      if (status === next) return;
+    function setStatus(next, reason = null) {
       status = next;
-      onStatusChange(status);
+      statusReason = reason;
+      onStatusChange(status, reason);
     }
 
     function pendingCount() {
       const events = adapter.getEvents();
       const cursor = normalizeCursor(adapter.getCursor());
       return Math.max(0, events.length - 1 - cursor);
+    }
+
+    // Unico punto que mueve state.enviadoHasta. Nunca lo retrocede (ignora
+    // candidatos menores o iguales al cursor actual) y nunca lo adelanta mas
+    // alla de los eventos que existen localmente: si el candidato (del
+    // servidor, o el que ya venia guardado) supera lo que hay en memoria,
+    // se reporta como divergencia en vez de adoptarlo. Adoptarlo a ciegas
+    // marcaria como "ya enviados" eventos locales que en realidad todavia
+    // no coinciden con lo que el servidor tiene bajo esos indices.
+    function tryAdvanceCursor(candidate) {
+      const events = adapter.getEvents();
+      const localCursor = normalizeCursor(adapter.getCursor());
+      const value = normalizeCursor(candidate);
+      if (value <= localCursor) return { advanced: false, diverged: false };
+      if (value > events.length - 1) return { advanced: false, diverged: true };
+      adapter.setCursor(value);
+      return { advanced: true, diverged: false };
     }
 
     function scheduleBackoff() {
@@ -124,7 +170,7 @@
     async function ensureSession() {
       if (adapter.getToken()) return true;
       if (!fetchImpl) {
-        setStatus(STATES.ERROR);
+        setStatus(STATES.ERROR, REASONS.SIN_FETCH);
         return false;
       }
       setStatus(STATES.CONNECTING);
@@ -147,15 +193,18 @@
       }
       const payload = await response.json();
       if (!payload || typeof payload.token !== 'string' || !payload.token) {
-        setStatus(STATES.ERROR);
+        setStatus(STATES.ERROR, REASONS.SESION_INVALIDA);
         scheduleBackoff();
         return false;
       }
       adapter.setToken(payload.token);
-      const serverCursor = normalizeCursor(payload.ultimoIndice);
-      const localCursor = normalizeCursor(adapter.getCursor());
-      if (serverCursor > localCursor) adapter.setCursor(serverCursor);
+      const advance = tryAdvanceCursor(payload.ultimoIndice);
       adapter.persist();
+      if (advance.diverged) {
+        setStatus(STATES.ERROR, REASONS.POSIBLE_MULTIPLES_PESTANAS);
+        scheduleBackoff();
+        return false;
+      }
       return true;
     }
 
@@ -181,7 +230,7 @@
         // siguiente tick. El cursor no se toca, nada se da por confirmado.
         adapter.setToken(null);
         adapter.persist();
-        setStatus(STATES.ERROR);
+        setStatus(STATES.ERROR, REASONS.TOKEN_RECHAZADO);
         scheduleBackoff();
         return;
       }
@@ -193,10 +242,13 @@
       const payload = await response.json();
       // El cursor SOLO avanza hasta lo que el servidor confirma, nunca hasta
       // lo que este cliente cree haber enviado.
-      const confirmedCursor = normalizeCursor(payload && payload.ultimoIndice);
-      const localCursor = normalizeCursor(adapter.getCursor());
-      if (confirmedCursor > localCursor) adapter.setCursor(confirmedCursor);
+      const advance = tryAdvanceCursor(payload && payload.ultimoIndice);
       adapter.persist();
+      if (advance.diverged) {
+        setStatus(STATES.ERROR, REASONS.POSIBLE_MULTIPLES_PESTANAS);
+        scheduleBackoff();
+        return;
+      }
       setStatus(STATES.ONLINE);
       lastConfirmedAt = now();
       resetBackoff();
@@ -205,6 +257,16 @@
     async function tick() {
       if (sending) return;
       if (now() < nextAttemptAt) return;
+      // El cursor cargado (de un save anterior de esta misma pestana, o del
+      // disco al arrancar) nunca deberia superar los eventos que existen en
+      // memoria. Si lo hace, es la misma senal de "otra pestana sobrescribio
+      // esta partida": no se envia nada hasta que los eventos locales
+      // vuelvan a alcanzarlo.
+      if (normalizeCursor(adapter.getCursor()) > adapter.getEvents().length - 1) {
+        setStatus(STATES.ERROR, REASONS.POSIBLE_MULTIPLES_PESTANAS);
+        scheduleBackoff();
+        return;
+      }
       if (pendingCount() === 0) {
         if (adapter.getToken() && status !== STATES.ONLINE) setStatus(STATES.ONLINE);
         return;
@@ -214,7 +276,7 @@
         const ready = await ensureSession();
         if (ready) await sendPendingBatch();
       } catch {
-        setStatus(STATES.OFFLINE);
+        setStatus(STATES.OFFLINE, REASONS.FALLO_RED);
         scheduleBackoff();
       } finally {
         sending = false;
@@ -237,6 +299,10 @@
       if (!token) return;
       const events = adapter.getEvents();
       const cursor = normalizeCursor(adapter.getCursor());
+      // Si el cursor ya supera los eventos locales (posible conflicto entre
+      // pestanas, ver REASONS.POSIBLE_MULTIPLES_PESTANAS), buildBatch no
+      // encuentra nada desde cursor + 1 y devuelve un lote vacio: no hace
+      // falta un chequeo aparte aqui, el siguiente `if` ya corta el envio.
       const batch = buildBatch(events, cursor, maxBatchSize, maxBatchBytes);
       if (batch.length === 0) return;
       const ctx = adapter.getContext();
@@ -274,13 +340,13 @@
     return {
       flushOnHide,
       getStatus() {
-        return { state: status, pending: pendingCount(), lastConfirmedAt };
+        return { state: status, pending: pendingCount(), lastConfirmedAt, reason: statusReason };
       },
       stop,
     };
   }
 
-  const api = { create, STATES, buildBatch };
+  const api = { create, STATES, REASONS, buildBatch };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.LumaTelemetryClient = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
