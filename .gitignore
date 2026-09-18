@@ -14,3 +14,7 @@ Investigación Gamificación Matemática Personalizada.pdf
 docs/CONTEXTO_ACTUAL.md
 AGENTS.md
 __pycache__/
+# Private host deployment reviews; publish portable integration documentation instead.
+docs/ANALISIS_DESPLIEGUE_ABEJORRO.md
+docs/PLAN_DESPLIEGUE_SEGURO_LUMA.md
+docs/REVISION_PRECOMMIT_TELEMETRIA.md

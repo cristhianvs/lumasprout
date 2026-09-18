@@ -1,0 +1,30 @@
+{
+  "version": "0.3.0",
+  "date": "2026-09-18",
+  "kind": "technical-validation-not-a-child-study",
+  "root": {
+    "nodeTests": 83,
+    "browserTests": 14,
+    "pedagogyBrowserTests": 5,
+    "laboratoryBrowserTests": 5,
+    "lint": "passed",
+    "format": "passed",
+    "siteBuild": "passed",
+    "marketingWidths": [1440, 390, 320]
+  },
+  "hostDashboard": {
+    "scope": "source host before extraction; synthetic API responses",
+    "existingTests": 327,
+    "typeCheck": "passed",
+    "lint": "passed",
+    "chartWidths": [1440, 768, 390, 320],
+    "connectionErrorAndRetry": "passed"
+  },
+  "notExecuted": [
+    "new 36-journey matrix",
+    "standalone deployment of extracted integration snapshot",
+    "production API and database integration tests in this release task",
+    "Hetzner deployment or migration",
+    "child participant study"
+  ]
+}

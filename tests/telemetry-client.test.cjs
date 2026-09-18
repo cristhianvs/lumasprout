@@ -399,7 +399,7 @@ test('si el evento confirmado no coincide con el local en esa posicion, no se av
         guardados: 2,
         duplicados: 0,
         ultimoIndice: 1,
-        evento_id: 'otra-pestana:1',
+        ultimoEventoId: 'otra-pestana:1',
       }),
     };
   };
@@ -423,7 +423,7 @@ test('si el evento confirmado no coincide con el local en esa posicion, no se av
   assert.equal(status.reason, T.REASONS.POSIBLE_MULTIPLES_PESTANAS_IDENTIDAD);
 });
 
-test('si el servidor no manda evento_id (contrato actual), se tolera su ausencia y se usa solo la cantidad', async () => {
+test('compatibilidad: si el servidor no manda ultimoEventoId (servidor mas viejo), se tolera su ausencia y se usa solo la cantidad', async () => {
   let tick;
   const fetchMock = async (url) => {
     if (url.endsWith('/api/luma/sesion')) {
@@ -452,8 +452,91 @@ test('si el servidor no manda evento_id (contrato actual), se tolera su ausencia
   assert.equal(
     adapter.getCursor(),
     1,
-    'sin evento_id, el comportamiento anterior (solo cantidad) se conserva',
+    'sin ultimoEventoId, el comportamiento anterior (solo cantidad) se conserva',
   );
+});
+
+test('ultimoEventoId en null (partida sin eventos en el servidor) no dispara una divergencia', async () => {
+  let tick;
+  const fetchMock = async (url) => {
+    if (url.endsWith('/api/luma/sesion')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ token: 'tok-1', ultimoIndice: -1, ultimoEventoId: null }),
+      };
+    }
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ guardados: 1, duplicados: 0, ultimoIndice: 0, ultimoEventoId: 'e0' }),
+    };
+  };
+  const adapter = makeAdapter();
+  adapter._state.events.push({ id: 'e0' });
+  const client = T.create({
+    config: { enabled: true, baseUrl: '' },
+    adapter,
+    fetch: fetchMock,
+    setInterval: (fn) => {
+      tick = fn;
+      return 1;
+    },
+    clearInterval: () => {},
+  });
+  tick();
+  await flushAsync();
+  assert.equal(client.getStatus().state, 'en linea');
+  assert.equal(adapter.getCursor(), 0);
+});
+
+test('al reanudar sesion, si ultimoEventoId no coincide con el evento local en esa posicion, se detecta la divergencia antes de adoptar el cursor', async () => {
+  // api-luma extendio POST /api/luma/sesion con el mismo ultimoEventoId que
+  // /eventos, justamente para este caso: el navegador perdio su cursor (por
+  // ejemplo, otro dispositivo escribio mientras tanto) y esta a punto de
+  // adoptar a ciegas un cursor que corresponde a eventos distintos.
+  let tick;
+  const fetchMock = async (url) => {
+    if (url.endsWith('/api/luma/sesion')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          token: 'tok-1',
+          ultimoIndice: 1,
+          ultimoEventoId: 'otro-dispositivo:1',
+        }),
+      };
+    }
+    throw new Error('no deberia intentar enviar mientras hay divergencia al reanudar sesion');
+  };
+  const adapter = makeAdapter();
+  adapter._state.events.push({ id: 'e0' }, { id: 'e1' });
+  const client = T.create({
+    config: { enabled: true, baseUrl: '', minBackoffMs: 1 },
+    adapter,
+    fetch: fetchMock,
+    setInterval: (fn) => {
+      tick = fn;
+      return 1;
+    },
+    clearInterval: () => {},
+  });
+  tick();
+  await flushAsync();
+  assert.equal(
+    adapter.getCursor(),
+    -1,
+    'no se adopta el cursor reanudado si el evento no coincide',
+  );
+  assert.equal(
+    adapter.getToken(),
+    'tok-1',
+    'el token si se conserva: sigue sirviendo para reintentar',
+  );
+  const status = client.getStatus();
+  assert.equal(status.state, 'error');
+  assert.equal(status.reason, T.REASONS.POSIBLE_MULTIPLES_PESTANAS_IDENTIDAD);
 });
 
 test('una confirmacion con forma invalida (200 con cuerpo vacio) no aparenta exito', async () => {

@@ -22,6 +22,15 @@ We’re building for curious learners **and** curious developers: plain JavaScri
 <p align="center"><img src="assets/media/gameplay.gif" alt="Real gameplay: island exploration, visual fraction construction and support" width="900"></p>
 <p align="center"><sub>Edited sequence of actual Playwright interactions. <a href="assets/media/workshop.png">View a still image.</a></sub></p>
 
+## New in v0.3.0
+
+**From local evidence to an optional remote observation workflow.** The game still runs without an account or backend. This release adds a guarded telemetry client, publishes the Luma dashboard/API integration source, and includes a child-friendly feedback questionnaire.
+
+<p align="center"><img src="assets/media/remote-dashboard-preview.png" alt="Redesigned Luma overview with readable date axes and distinct indicator colors; invented demonstration data" width="900"></p>
+<p align="center"><sub>Dashboard integration preview · Synthetic data · Requires a configured host API, not included in the hosted static demo.</sub></p>
+
+**[Remote telemetry](docs/TELEMETRY.md)** · **[Dashboard & API source](integrations/abejorro/README.md)** · **[Child questionnaire](docs/questionnaires/README.md)** · **[Release notes](CHANGELOG.md)**
+
 ## What makes it worth building?
 
 | Experience | Under the hood |
@@ -44,7 +53,7 @@ npm start
 
 Open **http://127.0.0.1:4173** for the game or **http://127.0.0.1:4173/admin.html** for the simulation lab. There is no `npm install` step for the application.
 
-The [hosted demo](https://cristhianvs.github.io/lumasprout/) opens a separate simulation save. Gameplay stays in that browser; the app does not upload events. GitHub hosts the public site and serves its assets. Export is an explicit action in **Familias → Registro y adaptación**. Use a separate browser profile for another learner.
+The [hosted demo](https://cristhianvs.github.io/lumasprout/) opens a separate simulation save. The demo keeps gameplay in that browser and never uploads simulation events. Optional remote transport for non-simulated runs is off by default; see the [configuration and limitations](docs/TELEMETRY.md). GitHub hosts the public site and serves its assets. Export is an explicit action in **Familias → Registro y adaptación**. Use a separate browser profile for another learner.
 
 ## Open the feedback loop
 

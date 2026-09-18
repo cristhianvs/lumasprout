@@ -431,3 +431,17 @@ a:focus-visible {
     justify-content: space-between;
   }
 }
+
+.release-preview img {
+  width: 100%;
+  max-height: 580px;
+  object-fit: cover;
+  object-position: top;
+  border: 1px solid #dce6df;
+  border-radius: 18px;
+  margin: 26px 0 10px;
+  box-shadow: 0 16px 48px #123c3210;
+}
+.release-preview .lead {
+  max-width: 780px;
+}

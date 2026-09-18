@@ -42,4 +42,13 @@ Revisa las [tareas iniciales](ROADMAP.md#starter-tasks) y la [guía para contrib
 
 Licencia [MIT](../LICENSE) para el código y los recursos originales. Creado por [Cristhian Velazco](https://github.com/cristhianvs).
 
-[Version history / Historial de versiones — v0.2.0](../CHANGELOG.md)
+[Version history / Historial de versiones — v0.3.0](../CHANGELOG.md)
+
+## Novedades de v0.3.0
+
+- Telemetría remota opcional, desactivada por defecto; simulaciones excluidas, destinos autorizados, reintentos y confirmación de recepción.
+- [Código del panel y la API de Luma](../integrations/abejorro/README.md), como módulos de integración con un host. No es un backend autónomo ni una publicación automática en Hetzner.
+- Panel rediseñado con fechas legibles, colores diferenciados y errores de conexión explicados. [Vista previa con datos sintéticos](../assets/media/remote-dashboard-preview.png).
+- [Cuestionario infantil IL-EXP-0.2](questionnaires/README.md), rellenable y con preguntas sobre la aventura inicial.
+
+Panorama reúne las partidas. Participante sigue un runId; eso no garantiza identificar al mismo niño entre dispositivos. La telemetría no mide directamente emociones. [Contrato y límites](TELEMETRY.md).

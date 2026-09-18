@@ -9,3 +9,5 @@
 No child photos, recordings or real participant telemetry are included. Original media is covered by the repository MIT license. Static alternatives to both GIFs are linked in the README and landing page.
 
 To refresh captures, start the local app with `npm start`, install Playwright/Chrome and Pillow, then run `python scripts/capture-marketing.py`. To regenerate the original banner/social image, run `python scripts/render-brand.py`. These are development tools, not runtime dependencies.
+
+- `media/remote-dashboard-preview.png`: screenshot of the Luma host dashboard redesign, rendered locally with invented API responses; no participant data. Added for v0.3.0.

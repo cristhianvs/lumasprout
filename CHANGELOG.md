@@ -4,6 +4,24 @@ Se usa versionamiento semántico: MAJOR para incompatibilidades, MINOR para capa
 
 La versión del producto en `package.json` es independiente de `CONFIG.version`, que controla compatibilidad de partidas. No modificar esa clave para publicar una entrega: requiere una migración explícita.
 
+## [0.3.0] — 2026-09-18
+
+### Motivo
+
+Preparar colaboración sobre telemetría remota y hacer público el trabajo reciente de observación, manteniendo el juego local y las partidas existentes. Es una versión de desarrollo; no declara listo el piloto infantil ni despliega el administrador de Abejorro.
+
+### Cambios
+
+- Transporte opcional desactivado por defecto, exclusión de simulaciones, destinos autorizados, timeout/reintentos, límites UTF-8 y confirmaciones de recepción con `ultimoEventoId` cuando está disponible.
+- Familias refleja el estado de envío. Compatibilidad con las claves de guardado y `CONFIG.version` intactas.
+- Snapshot público de los módulos Luma de API PostgreSQL y panel integrado: tarjetas, paleta diferenciada, fechas legibles, detalle accesible, manejo de errores y distinción entre panorama agregado y partida individual.
+- Cuestionario infantil rellenable IL-EXP-0.2, con comprensión de la aventura introductoria y guía de aplicación; generador reproducible.
+- Portada y documentación pública actualizadas con captura sintética y guías de integración, alcance y límites.
+
+### Validación y límites
+
+Lint, formato, 83 pruebas Node y build local aprobados durante la preparación; las comprobaciones de navegador y CI del commit publicado se registran en GitHub Actions. El rediseño del host pasó TypeScript/lint y comprobaciones Playwright con respuestas ficticias en escritorio y móvil; no equivale a probar APIs reales. Los módulos extraídos requieren adaptadores y pruebas en su host. Sin migración de producción ni modificación de Protocolo42. La evidencia histórica de 36 recorridos corresponde a v0.2.0 y no se presenta como repetida en esta entrega.
+
 ## [0.2.0] — 2026-09-17
 
 ### Motivo

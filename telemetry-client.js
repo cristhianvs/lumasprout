@@ -200,14 +200,16 @@
     // candidatos menores o iguales al cursor actual) y nunca lo adelanta mas
     // alla de los eventos que existen localmente: si el candidato (del
     // servidor, o el que ya venia guardado) supera lo que hay en memoria,
-    // se reporta como divergencia en vez de adoptarlo. Cuando el servidor
-    // manda ademas el id del evento que confirma en esa posicion
-    // (expectedEventId), se exige que coincida con el evento local: dos
-    // ramas de igual longitud (o una rama local que alcanzo la longitud
-    // remota) pueden tener contenidos distintos bajo el mismo indice, y solo
-    // comparar cantidades no lo detecta. Si expectedEventId no viene (el
-    // servidor todavia no lo manda), se tolera su ausencia y se conserva el
-    // comportamiento anterior basado solo en cantidad.
+    // se reporta como divergencia en vez de adoptarlo. El servidor manda
+    // ademas ultimoEventoId, el id del evento que confirma exactamente en
+    // esa posicion (mismo campo en /sesion y en /eventos): se exige que
+    // coincida con el evento local en esa posicion. Dos ramas de igual
+    // longitud (o una rama local que alcanzo la longitud remota) pueden
+    // tener contenidos distintos bajo el mismo indice, y comparar solo
+    // cantidades no lo detecta. Si expectedEventId llega como null (partida
+    // sin eventos guardados en el servidor) o no viene (compatibilidad con
+    // un servidor mas viejo que no lo mande todavia), se tolera su ausencia
+    // y se conserva el comportamiento basado solo en cantidad.
     function tryAdvanceCursor(candidate, expectedEventId) {
       const events = adapter.getEvents();
       const localCursor = normalizeCursor(adapter.getCursor());
@@ -281,7 +283,7 @@
       let diverged = false;
       let reasonKey = null;
       if (isValidUltimoIndice(payload.ultimoIndice)) {
-        const advance = tryAdvanceCursor(payload.ultimoIndice, payload.evento_id);
+        const advance = tryAdvanceCursor(payload.ultimoIndice, payload.ultimoEventoId);
         diverged = advance.diverged;
         reasonKey = advance.reasonKey;
       }
@@ -338,10 +340,11 @@
         return;
       }
       // El cursor SOLO avanza hasta lo que el servidor confirma, nunca hasta
-      // lo que este cliente cree haber enviado. Cuando el servidor incluye
-      // el id del evento confirmado, tambien se exige que coincida con el
-      // evento local en esa posicion (ver tryAdvanceCursor).
-      const advance = tryAdvanceCursor(payload.ultimoIndice, payload.evento_id);
+      // lo que este cliente cree haber enviado. El servidor incluye ademas
+      // ultimoEventoId (el id del evento confirmado en esa misma posicion):
+      // se exige que coincida con el evento local, no solo que la cantidad
+      // cuadre (ver tryAdvanceCursor).
+      const advance = tryAdvanceCursor(payload.ultimoIndice, payload.ultimoEventoId);
       if (advance.advanced) adapter.persist();
       if (advance.diverged) {
         setStatus(STATES.ERROR, divergenceReason(advance.reasonKey));
