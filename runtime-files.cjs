@@ -5,6 +5,8 @@ module.exports = Object.freeze([
   'usability.css',
   'runtime.js',
   'engine.js',
+  'config.js',
+  'telemetry-client.js',
   'app.js',
   'admin.html',
   'admin.css',

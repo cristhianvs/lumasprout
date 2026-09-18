@@ -1,9 +1,12 @@
-/* Isla Luma: sin servicios externos. Datos y progreso permanecen en este navegador. */
+/* Isla Luma: el progreso vive en este navegador. El envio de telemetria a un
+   servidor remoto es opcional, esta desactivado por defecto y nunca bloquea
+   ni cambia el juego (ver config.js y telemetry-client.js). */
 'use strict';
 const E = window.Luma,
   $ = (s) => document.querySelector(s),
   SIMULATION = new URLSearchParams(location.search).get('simulation') === '1',
-  KEY = SIMULATION ? 'isla-luma-simulation-v1' : 'isla-luma-v1';
+  KEY = SIMULATION ? 'isla-luma-simulation-v1' : 'isla-luma-v1',
+  SCHEMA_VERSION = '1.4';
 const adaptationPolicy = () =>
   E.sessionPolicy(state.events, SIMULATION ? state.simulationConfig || {} : {});
 const fresh = () => ({
@@ -57,6 +60,10 @@ state.playProgress ??= {
   ),
   gardenActions: 0,
 };
+// Cursor de telemetria remota: indice del ultimo evento confirmado por el
+// servidor. -1 significa que nada se ha confirmado todavia (incluye
+// partidas guardadas antes de que existiera este campo).
+state.enviadoHasta ??= -1;
 const session = crypto.randomUUID();
 let paused = false,
   hidden = document.hidden,
@@ -146,7 +153,7 @@ const emit = window.LumaRuntime.createTelemetry({
     session,
     runId: state.runId,
     version: E.CONFIG.version,
-    schemaVersion: '1.4',
+    schemaVersion: SCHEMA_VERSION,
     policyVersion: E.POLICY.version,
     simulation: SIMULATION,
     experience: state.phase === 'math' ? state.current?.experience || null : null,
@@ -163,6 +170,40 @@ function log(type, data = {}) {
   save();
   return event;
 }
+// Cliente opcional de telemetria remota. La cola es state.events + el
+// cursor state.enviadoHasta: este adapter solo expone lecturas/escrituras de
+// ese mismo estado, sin crear una copia de los eventos en otro lado.
+const telemetryAdapter = {
+  getContext: () => ({
+    runId: state.runId,
+    version: E.CONFIG.version,
+    schemaVersion: SCHEMA_VERSION,
+    policyVersion: E.POLICY.version,
+    simulation: SIMULATION,
+  }),
+  getEvents: () => state.events,
+  getCursor: () => state.enviadoHasta,
+  setCursor: (value) => {
+    state.enviadoHasta = value;
+  },
+  getToken: () => state.telemetryToken || null,
+  setToken: (value) => {
+    if (value) state.telemetryToken = value;
+    else delete state.telemetryToken;
+  },
+  persist: save,
+};
+const telemetry = window.LumaTelemetryClient
+  ? window.LumaTelemetryClient.create({
+      config: (window.LumaTelemetryConfig && window.LumaTelemetryConfig.config) || {
+        enabled: false,
+      },
+      adapter: telemetryAdapter,
+    })
+  : {
+      flushOnHide() {},
+      getStatus: () => ({ state: 'desactivado', pending: 0, lastConfirmedAt: null }),
+    };
 function announce(text) {
   $('#live').textContent = text;
 }
@@ -1427,6 +1468,7 @@ document.addEventListener('visibilitychange', () => {
     reason: 'tab_visibility_not_assumed_abandonment',
   });
   store.flush();
+  if (hidden) telemetry.flushOnHide();
   lastTick = performance.now();
   if (!hidden) lastInput = performance.now();
 });
@@ -1439,6 +1481,7 @@ window.addEventListener('pagehide', () => {
     notAssumedFailure: true,
   });
   store.flush();
+  telemetry.flushOnHide();
 });
 setInterval(() => {
   const now = performance.now(),
